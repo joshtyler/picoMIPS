@@ -3,7 +3,7 @@ import re
 import datetime
 
 infilename = "optimised.asm"
-outfilename = "memory.mif"
+outfilename = "memory.bin"
 
 #Constant dictionary
 const_dict = dict()
@@ -139,6 +139,7 @@ def formatTuple(input):
 
     return retstr
 
+# Output memory as an altera MIF file
 def outputAlteraMif(filename, list, formatter):
     output = io.open(filename, 'w')
     output.write("-- Automatically generated memory map by python\n")
@@ -156,10 +157,20 @@ def outputAlteraMif(filename, list, formatter):
     output.write("\nEND;\n")
     output.close()
 
+# Output memory in a format readable by verilog $readmemb
+def outputHex(filename, list, formatter):
+    output = io.open(filename, 'w')
+    output.write("//Automatically generated memory map by python\n")
+    output.write("//{}\n".format(datetime.datetime.now().strftime("%I:%M%p on %B %d %Y")))
+
+    for i in range(0, len(list)):
+        output.write('{}\n'.format(formatTuple(list[i])))
+
+    output.close()
 
 inputFile = io.open(infilename, 'r')
 lst = get_numerical_data(inputFile)
 inputFile.close()
 
-outputAlteraMif(outfilename, lst, formatTuple)
+outputHex(outfilename, lst, formatTuple)
 
