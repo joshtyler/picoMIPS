@@ -1,6 +1,13 @@
-module prog_mem (input logic clock, input logic [5:0] addr, output logic [12:0] data);
+//Program memory
 
-(* ram_init_file = "progmem.mif" *) logic[12:0] memory[48:0];
+`include "constants.sv"
+
+module prog_mem (input logic clock, input logic `PROG_MEM_ADDR_WIDTH addr, output logic `PROG_MEM_WIDTH data);
+
+logic`PROG_MEM_WIDTH memory `PROG_MEM_DEPTH;
+
+initial
+	$readmemb("progmem.bin", memory);
 
 always @ (posedge clock)
 	data <= memory[addr];
