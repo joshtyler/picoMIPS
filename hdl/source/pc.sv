@@ -23,7 +23,7 @@ always @(posedge clk, posedge reset)
 begin
 	if(reset)
 		ctr <= '0;
-	else if(cycle == `CYCLE_EXEC)
+	else if(cycle[`CYCLE_EXEC])
 		ctr <= selected_addr;
 end
 

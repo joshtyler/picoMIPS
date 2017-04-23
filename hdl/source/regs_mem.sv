@@ -13,7 +13,7 @@ logic `REG_SIZE mem `REG_DEPTH_SIZE;
 //Note that the unity value is NOT 1 because we need to account for the fact that immediates have lower significance
 initial
 	for(int i=0; i < `REG_DEPTH; i++)
-		mem[i] = (1 << 4);
+		mem[i] = (1 << 3);
 
 always @(posedge clk)
 begin

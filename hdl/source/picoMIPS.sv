@@ -14,17 +14,17 @@ logic `PROG_MEM_SIZE prog_mem_data;
 logic op_code;
 logic `REG_ADDR_SIZE reg1_addr, reg2_addr;
 logic `IMM_SIZE immediate;
-logic `PROG_MEM_SIZE branch_addr;
+logic `PROG_MEM_ADDR_SIZE branch_addr;
 //Decode instruction into constituant parts
 localparam OP_CODE_IDX = $high(prog_mem_data);
 localparam REG1_HIGH_IDX = OP_CODE_IDX - 1;
-localparam REG1_LOW_IDX = REG1_HIGH_IDX - `REG_ADDR_WIDTH;
+localparam REG1_LOW_IDX = REG1_HIGH_IDX - `REG_ADDR_WIDTH +1;
 localparam REG2_HIGH_IDX = REG1_LOW_IDX - 1;
-localparam REG2_LOW_IDX = REG2_HIGH_IDX - `REG_ADDR_WIDTH;
+localparam REG2_LOW_IDX = REG2_HIGH_IDX - `REG_ADDR_WIDTH +1;
 localparam BRANCH_HIGH_IDX = REG2_LOW_IDX - 1;
 localparam BRANCH_LOW_IDX = $low(prog_mem_data);
 localparam IMM_LOW_IDX = $low(prog_mem_data);
-localparam IMM_HIGH_IDX = IMM_LOW_IDX + `IMM_WIDTH;
+localparam IMM_HIGH_IDX = IMM_LOW_IDX + `IMM_WIDTH -1;
 always_comb
 begin
 	op_code = prog_mem_data[OP_CODE_IDX];
@@ -109,7 +109,7 @@ multiplexer #(.WIDTH(`REG_WIDTH + 1 ))  multi_sub_out_mux
 (
 	.a( {subleq_branch, subleq_result} ),
 	.b( {1'b0, multi_result} ),
-	.sel(opcode),
+	.sel(op_code),
 	.out( {branch, wr_data} )
 );
 
