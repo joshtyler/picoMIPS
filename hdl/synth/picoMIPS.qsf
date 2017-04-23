@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE115F23C7
-set_global_assignment -name TOP_LEVEL_ENTITY multiplexer
+set_global_assignment -name TOP_LEVEL_ENTITY regs
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "10:41:38  FEBRUARY 09, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION 15.0.0
@@ -56,6 +56,9 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name OPTIMIZATION_MODE BALANCED
 set_global_assignment -name ALLOW_ANY_RAM_SIZE_FOR_RECOGNITION ON
 set_global_assignment -name ALLOW_ANY_ROM_SIZE_FOR_RECOGNITION ON
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/regs_mem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/regs.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/register.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../source/multiplexer.sv
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
