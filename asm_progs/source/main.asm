@@ -22,7 +22,7 @@ poll4:  JNZ     SW8     poll4
 
 //Begin Affine algorithm execution part 1
 //Note this could be optimised if some coefficients are repeated
-        MULTI   R1      R3		A23      // Multiply A21, and X1, store in R3
+        MULTI   R1      R3		A21      // Multiply A21, and X1, store in R3
         MULTI   R2      R4		A22      // Multiply A22, and Y1, store in R4
         ADD     R4      R3              // Add R3 and R4, store in R4
         LDI     R3		B2              // Store B2 in R3

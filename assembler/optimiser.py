@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # This program takes an assembly program and converts it to only use SUBLEQ and MULTI commands
 
 import io

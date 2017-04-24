@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #This script takes an assembly program constaining SUBLEQ and MULTI instructions, and converts it to machine code for my picoMIPS implementation
 
@@ -73,7 +73,7 @@ def process_labels(line, address):
     line = line.strip('\n')  # Remove newline
     args = re.split(' +', line)
 
-    # If the current line has label(s), append to output stream and continue as normal
+    # If the current line has label(s), append to dictionary
     # If the line at any point is empty, return
     i = 0
     while i == 0:
@@ -115,6 +115,7 @@ def process_cmd(args, address):
             break
         # There aren't any other possibilities!
         else:
+            print(args[i])
             assert False
 
     # For a two argument subleq, append the next address as the branch address
