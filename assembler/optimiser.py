@@ -101,7 +101,7 @@ def process_buf(in_buf, out_buf):
 
 def process_cmd(line, out_buf):
     line = line.strip('\n')  # Remove newlines
-    args = re.split(' +', line)
+    args = re.split(' |\t+', line)
 
     # If the initial value is a space, resplit will put a space on the start of the list
     # Remove all empty arguments in string
