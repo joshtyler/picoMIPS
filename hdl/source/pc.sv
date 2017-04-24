@@ -7,10 +7,15 @@ module pc(input logic clk, reset, branch, logic `CYCLE_SIZE cycle, logic `PROG_M
 logic `PROG_MEM_ADDR_SIZE ctr;
 logic `PROG_MEM_ADDR_SIZE selected_addr;
 
+logic `PROG_MEM_ADDR_SIZE new_ctr;
+
+always_comb
+	new_ctr = ctr + 1;
+
 //Multiplexer to choose between next address or branch
 multiplexer #(.WIDTH(`PROG_MEM_ADDR_WIDTH)) branch_mux
 (
-	.a(ctr + 1),
+	.a(new_ctr),
 	.b(branch_addr),
 	.sel(branch),
 	.out(selected_addr)
