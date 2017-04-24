@@ -16,9 +16,10 @@ localparam CONSTANT_READ_ADDR = 0;
 always_comb
 	addr = CONSTANT_READ_ADDR;
 
-//Initialise memory to zero
+//Init memory to zero
 initial
-	mem[addr] = '0;
+	for(int i=0; i < 2; i++)
+		mem[i] = 0;
 
 always @(posedge clk)
 begin
