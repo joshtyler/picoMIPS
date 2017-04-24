@@ -1,9 +1,12 @@
+#!/usr/bin/python
+
+#This script takes an assembly program constaining SUBLEQ and MULTI instructions, and converts it to machine code for my picoMIPS implementation
+
 import io
 import re
 import datetime
+import sys
 
-infilename = "optimised.asm"
-outfilename = "memory.bin"
 
 #Constant dictionary
 const_dict = dict()
@@ -167,6 +170,13 @@ def outputHex(filename, list, formatter):
         output.write('{}\n'.format(formatTuple(list[i])))
 
     output.close()
+
+#Begin main script
+
+
+assert(len(sys.argv) == 3)  # We need both an input and output file specified
+infilename = sys.argv[1]
+outfilename = sys.argv[2]
 
 inputFile = io.open(infilename, 'r')
 lst = get_numerical_data(inputFile)
