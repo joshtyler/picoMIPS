@@ -12,11 +12,11 @@
 //Program memory constants
 `define PROG_MEM_WIDTH 13
 `define PROG_MEM_SIZE [`PROG_MEM_WIDTH-1:0]
-`define PROG_MEM_DEPTH 49
+`define PROG_MEM_DEPTH 55
 `define PROG_MEM_DEPTH_SIZE [`PROG_MEM_DEPTH-1:0]
 `define PROG_MEM_ADDR_WIDTH 6
 `define PROG_MEM_ADDR_SIZE [`PROG_MEM_ADDR_WIDTH-1:0]
-`define IMM_WIDTH 4
+`define IMM_WIDTH 5
 `define IMM_SIZE [`IMM_WIDTH-1:0]
 
 //Register constants

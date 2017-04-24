@@ -9,9 +9,9 @@ localparam EXTENDED_WORD_WIDTH = `REG_WIDTH + `IMM_WIDTH -1; //This is one less 
 logic signed [EXTENDED_WORD_WIDTH-1 : 0] x,y;
 logic signed [(2*EXTENDED_WORD_WIDTH)-1 : 0] z;
 
-localparam REGISTER_SHIFT = `IMM_WIDTH;
+localparam REGISTER_SHIFT = `IMM_WIDTH -1; //4
 
-localparam RESULT_OFFSET = `REG_WIDTH -1;
+localparam RESULT_OFFSET = 2*REGISTER_SHIFT -1; //7
 
 always_comb
 begin
