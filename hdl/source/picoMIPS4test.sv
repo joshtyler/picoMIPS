@@ -24,10 +24,10 @@ module picoMIPS4test(
 logic [6:0] sw_hex[3:0];
 always_comb
 begin
-	HEX0 = sw_hex[0]; //Units
-	HEX1 = sw_hex[1]; //Tens
-	HEX2 = sw_hex[2]; //Hundreds
-	HEX3 = sw_hex[3]; //Sign
+	HEX0 = ~ sw_hex[0]; //Units
+	HEX1 = ~ sw_hex[1]; //Tens
+	HEX2 = ~ sw_hex[2]; //Hundreds
+	HEX3 = ~ sw_hex[3]; //Sign
 end
 
 bin_to_bcd sw_disp
@@ -39,10 +39,10 @@ bin_to_bcd sw_disp
 logic [6:0] led_hex[3:0];
 always_comb
 begin
-	HEX4 = led_hex[0]; //Units
-	HEX5 = led_hex[1]; //Tens
-	HEX6 = led_hex[2]; //Hundreds
-	HEX7 = led_hex[3]; //Sign
+	HEX4 = ~ led_hex[0]; //Units
+	HEX5 = ~ led_hex[1]; //Tens
+	HEX6 = ~ led_hex[2]; //Hundreds
+	HEX7 = ~ led_hex[3]; //Sign
 end
 
 bin_to_bcd led_disp
