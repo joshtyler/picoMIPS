@@ -17,9 +17,24 @@ begin
 	else
 		y = 1;
 
-	result = x * y; //This should infer a multipilier
 	out = result[WIDTH*2-1: WIDTH];
 end 
 
+	//Instantiate multiplier
+	lpm_mult	lpm_mult_component (
+				.dataa (x),
+				.datab (y),
+				.result (result),
+				.aclr (1'b0),
+				.clken (1'b1),
+				.clock (1'b0),
+				.sum (1'b0));
+	defparam
+		lpm_mult_component.lpm_hint = "DEDICATED_MULTIPLIER_CIRCUITRY=YES,MAXIMIZE_SPEED=5",
+		lpm_mult_component.lpm_representation = "UNSIGNED",
+		lpm_mult_component.lpm_type = "LPM_MULT",
+		lpm_mult_component.lpm_widtha = 2*WIDTH,
+		lpm_mult_component.lpm_widthb = 2*WIDTH,
+		lpm_mult_component.lpm_widthp = 4*WIDTH;
 
 endmodule

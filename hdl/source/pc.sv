@@ -2,7 +2,7 @@
 
 `include "constants.sv"
 
-module pc(input logic clk, reset, branch, logic `CYCLE_SIZE cycle, logic `PROG_MEM_ADDR_SIZE branch_addr, output logic `PROG_MEM_ADDR_SIZE addr);
+module pc(input logic clk, reset, branch, input logic `CYCLE_SIZE cycle, input logic `PROG_MEM_ADDR_SIZE branch_addr, output logic `PROG_MEM_ADDR_SIZE addr);
 
 logic `PROG_MEM_ADDR_SIZE ctr;
 logic `PROG_MEM_ADDR_SIZE selected_addr;

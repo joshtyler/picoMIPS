@@ -21,6 +21,7 @@ begin
 	else
 		branch = 0;
 
+
 	result = result_tmp[$high(result_tmp)-1 : 0];
 end
 

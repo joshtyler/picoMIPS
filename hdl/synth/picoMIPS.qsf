@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE115F23C7
-set_global_assignment -name TOP_LEVEL_ENTITY regs
+set_global_assignment -name TOP_LEVEL_ENTITY picoMIPS
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 16.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "10:41:38  FEBRUARY 09, 2017"
 set_global_assignment -name LAST_QUARTUS_VERSION 15.0.0
@@ -53,9 +53,18 @@ set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
-set_global_assignment -name OPTIMIZATION_MODE BALANCED
+set_global_assignment -name OPTIMIZATION_MODE "AGGRESSIVE AREA"
 set_global_assignment -name ALLOW_ANY_RAM_SIZE_FOR_RECOGNITION ON
 set_global_assignment -name ALLOW_ANY_ROM_SIZE_FOR_RECOGNITION ON
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/constants.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/subleq.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/prog_mem.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/picoMIPS4test.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/picoMIPS.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/pc.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/multi.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/cycle.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../source/counter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../source/regs_mem.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../source/regs.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../source/register.sv

@@ -1,0 +1,8 @@
+Library mapping
+C:/altera/15.0/modelsim_ase/altera/verilog/220model as lpm_ver
+C:/altera/15.0/modelsim_ase/altera/vhdl/220model as lpm
+
+Needed to be copied locally, otherwise you get a RW permission error.
+
+Command:
+vsim -novopt -L lpm_ver work.test_picoMIPS

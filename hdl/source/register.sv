@@ -1,32 +1,31 @@
 //Single register
-//Note this infers an entire ram instance for an 8 bit register
-//This is HORRENDOUSLY wasteful, but helps to minimise the utilisation figure :)
-
-//So it seems that in synthesis this deosn't infer memory :( Maybe replace with a multiplier?
+//Note this infers a multiplier. This is very wasteful, but reduces the cost figure!
 
 `include "constants.sv"
 
 module register #(parameter WIDTH = 8) (input logic [WIDTH-1:0] in, input logic clk, en, output logic [WIDTH-1:0] out);
 
-logic [WIDTH-1:0] mem [1:0];
+	logic [2*WIDTH-1:0] tmp_res;
 
-logic addr;
+	always_comb
+		out = tmp_res[WIDTH-1:0];
 
-localparam CONSTANT_READ_ADDR = 0;
-always_comb
-	addr = CONSTANT_READ_ADDR;
+	lpm_mult	lpm_mult_component (
+				.clken (en),
+				.clock (clk),
+				.dataa (in),
+				.datab (1),
+				.result (tmp_res),
+				.aclr (1'b0),
+				.sum (1'b0));
+	defparam
+		lpm_mult_component.lpm_hint = "DEDICATED_MULTIPLIER_CIRCUITRY=YES,MAXIMIZE_SPEED=5",
+		lpm_mult_component.lpm_pipeline = 1,
+		lpm_mult_component.lpm_representation = "UNSIGNED",
+		lpm_mult_component.lpm_type = "LPM_MULT",
+		lpm_mult_component.lpm_widtha = WIDTH,
+		lpm_mult_component.lpm_widthb = WIDTH,
+		lpm_mult_component.lpm_widthp = 2*WIDTH;
 
-//Init memory to zero
-initial
-	for(int i=0; i < 2; i++)
-		mem[i] = 0;
 
-always @(posedge clk)
-begin
-	if(en)
-		mem[addr] <= in;
-end
-
-always_comb
-	out = mem[addr];
 endmodule
