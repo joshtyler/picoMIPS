@@ -1,4 +1,4 @@
-set_location_assignment PIN_Y2 -to fastclk (50MHZ CLOCK_50)
+set_location_assignment PIN_Y2 -to fastclk
 
 set_location_assignment PIN_N21 -to push_button[2]
 set_location_assignment PIN_M21 -to push_button[1]
