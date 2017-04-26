@@ -1,5 +1,5 @@
 set_location_assignment PIN_Y2 -to fastclk
-
+set_instance_assignment -name IO_STANDARD "3.3V LVTTL" -to fastclk
 set_location_assignment PIN_N21 -to push_button[2]
 set_location_assignment PIN_M21 -to push_button[1]
 set_location_assignment PIN_M23 -to push_button[0]

@@ -20,7 +20,7 @@
 ## PROGRAM "Quartus II"
 ## VERSION "Version 15.0.0 Build 145 04/22/2015 SJ Full Version"
 
-## DATE    "Wed Apr 26 14:01:53 2017"
+## DATE    "Wed Apr 26 14:35:41 2017"
 
 ##
 ## DEVICE  "EP4CE115F29C7"
@@ -39,7 +39,7 @@ set_time_format -unit ns -decimal_places 3
 # Create Clock
 #**************************************************************
 
-create_clock -name {counter:c|count[23]} -period 1.000 -waveform { 0.000 0.500 } [get_registers {counter:c|count[23]}]
+create_clock -name {counter:c|count[23]} -period 1000.000 -waveform { 0.000 500.000 } [get_registers { counter:c|count[23] }]
 create_clock -name {fastclk} -period 20.000 -waveform { 0.000 10.000 } [get_ports { fastclk }]
 
 
@@ -59,22 +59,22 @@ create_clock -name {fastclk} -period 20.000 -waveform { 0.000 10.000 } [get_port
 # Set Clock Uncertainty
 #**************************************************************
 
-set_clock_uncertainty -rise_from [get_clocks {fastclk}] -rise_to [get_clocks {fastclk}]  0.020  
-set_clock_uncertainty -rise_from [get_clocks {fastclk}] -fall_to [get_clocks {fastclk}]  0.020  
-set_clock_uncertainty -rise_from [get_clocks {fastclk}] -rise_to [get_clocks {counter:c|count[23]}]  0.030  
-set_clock_uncertainty -rise_from [get_clocks {fastclk}] -fall_to [get_clocks {counter:c|count[23]}]  0.030  
-set_clock_uncertainty -fall_from [get_clocks {fastclk}] -rise_to [get_clocks {fastclk}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {fastclk}] -fall_to [get_clocks {fastclk}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {fastclk}] -rise_to [get_clocks {counter:c|count[23]}]  0.030  
-set_clock_uncertainty -fall_from [get_clocks {fastclk}] -fall_to [get_clocks {counter:c|count[23]}]  0.030  
-set_clock_uncertainty -rise_from [get_clocks {counter:c|count[23]}] -rise_to [get_clocks {fastclk}]  0.030  
-set_clock_uncertainty -rise_from [get_clocks {counter:c|count[23]}] -fall_to [get_clocks {fastclk}]  0.030  
 set_clock_uncertainty -rise_from [get_clocks {counter:c|count[23]}] -rise_to [get_clocks {counter:c|count[23]}]  0.020  
 set_clock_uncertainty -rise_from [get_clocks {counter:c|count[23]}] -fall_to [get_clocks {counter:c|count[23]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {counter:c|count[23]}] -rise_to [get_clocks {fastclk}]  0.030  
-set_clock_uncertainty -fall_from [get_clocks {counter:c|count[23]}] -fall_to [get_clocks {fastclk}]  0.030  
+set_clock_uncertainty -rise_from [get_clocks {counter:c|count[23]}] -rise_to [get_clocks {fastclk}]  0.030  
+set_clock_uncertainty -rise_from [get_clocks {counter:c|count[23]}] -fall_to [get_clocks {fastclk}]  0.030  
 set_clock_uncertainty -fall_from [get_clocks {counter:c|count[23]}] -rise_to [get_clocks {counter:c|count[23]}]  0.020  
 set_clock_uncertainty -fall_from [get_clocks {counter:c|count[23]}] -fall_to [get_clocks {counter:c|count[23]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {counter:c|count[23]}] -rise_to [get_clocks {fastclk}]  0.030  
+set_clock_uncertainty -fall_from [get_clocks {counter:c|count[23]}] -fall_to [get_clocks {fastclk}]  0.030  
+set_clock_uncertainty -rise_from [get_clocks {fastclk}] -rise_to [get_clocks {counter:c|count[23]}]  0.030  
+set_clock_uncertainty -rise_from [get_clocks {fastclk}] -fall_to [get_clocks {counter:c|count[23]}]  0.030  
+set_clock_uncertainty -rise_from [get_clocks {fastclk}] -rise_to [get_clocks {fastclk}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {fastclk}] -fall_to [get_clocks {fastclk}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {fastclk}] -rise_to [get_clocks {counter:c|count[23]}]  0.030  
+set_clock_uncertainty -fall_from [get_clocks {fastclk}] -fall_to [get_clocks {counter:c|count[23]}]  0.030  
+set_clock_uncertainty -fall_from [get_clocks {fastclk}] -rise_to [get_clocks {fastclk}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {fastclk}] -fall_to [get_clocks {fastclk}]  0.020  
 
 
 #**************************************************************
