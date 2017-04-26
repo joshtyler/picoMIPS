@@ -8,16 +8,22 @@
 
 		CONST	B1		5			// 00101 = 5
 		CONST	B2		12			// 01100 = 12
+		
+		CONST	F		15
 
 //Ensure that zero register is zero
 SUBLEQ Z Z
 
 //Load pixels
-start:  JZ      SW8     start           // Wait for SW8 = 0
+start:	SUBLEQ	R4		R4				//Clear LEDs
+poll1:	JZ      SW8     poll1           // Wait for SW8 = 0
         MOV     SW17    R1              // Store X1 in R1
+		LDI		R4		F				//Put F on LEDs to confirm
 poll2:  JNZ     SW8		poll2
+		SUBLEQ	R4		R4				//Clear LEDs
 poll3:  JZ      SW8     poll3
         MOV     SW17    R2              // Store Y1 in R2
+		LDI		R4		F				//Put F on LEDs to confirm
 poll4:  JNZ     SW8     poll4
 
 //Begin Affine algorithm execution part 1

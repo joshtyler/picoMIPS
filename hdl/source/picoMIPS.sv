@@ -54,11 +54,15 @@ cycle cycle0
 	.cycle(cycle)
 );
 
+logic reset;
+always_comb
+	reset = !SW[$high(SW)]; //The highest switch is reset, but it's active low
+
 //Program counter
 pc pc0
 (
 	.clk(clk),
-	.reset(SW[$high(SW)]), //The hihest swtich is reset
+	.reset(reset),
 	.branch(branch),
 	.cycle(cycle),
 	.branch_addr(branch_addr),

@@ -124,9 +124,9 @@ begin
 	SW8 = 0;
 
 	//Reset
-	SW9 = 1;
-	# 12ns;
 	SW9 = 0;
+	# 100ns;
+	SW9 = 1;
 
 	//Test all possible values
 	for(int i = -128; i < 128; i++)
