@@ -1,0 +1,29 @@
+set_location_assignment PIN_Y2 -to fastclk (50MHZ CLOCK_50)
+
+set_location_assignment PIN_N21 -to push_button[2]
+set_location_assignment PIN_M21 -to push_button[1]
+set_location_assignment PIN_M23 -to push_button[0]
+
+set_location_assignment PIN_AB25 -to SW[9]
+set_location_assignment PIN_AC25 -to SW[8]
+set_location_assignment PIN_AB26 -to SW[7]
+set_location_assignment PIN_AD26 -to SW[6]
+set_location_assignment PIN_AC26 -to SW[5] 
+set_location_assignment PIN_AB27 -to SW[4] 
+set_location_assignment PIN_AD27 -to SW[3] 
+set_location_assignment PIN_AC27 -to SW[2] 
+set_location_assignment PIN_AC28 -to SW[1] 
+set_location_assignment PIN_AB28 -to SW[0]
+ 
+set_location_assignment PIN_G17 -to LED[9] 
+set_location_assignment PIN_J17 -to LED[8] 
+set_location_assignment PIN_H19 -to LED[7] 
+set_location_assignment PIN_J19 -to LED[6] 
+set_location_assignment PIN_E18 -to LED[5] 
+set_location_assignment PIN_F18 -to LED[4] 
+set_location_assignment PIN_F21 -to LED[3] 
+set_location_assignment PIN_E19 -to LED[2] 
+set_location_assignment PIN_F19 -to LED[1] 
+set_location_assignment PIN_G19 -to LED[0]
+
+

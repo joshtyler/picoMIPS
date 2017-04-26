@@ -14,7 +14,7 @@ module register #(parameter WIDTH = 8) (input logic [WIDTH-1:0] in, input logic 
 				.clken (en),
 				.clock (clk),
 				.dataa (in),
-				.datab (1),
+				.datab ({7'b0,1'b1}),
 				.result (tmp_res),
 				.aclr (1'b0),
 				.sum (1'b0));

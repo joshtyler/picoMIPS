@@ -1,16 +1,2 @@
-#Gitignore for quartus
-
-#Ignore quartus generated folders
-db/
-incremental_db/
-simulation/
-timing/
-output_files/
-greybox_tmp/
-
-#Ignore Quartus generated files
-*_description.txt
-*.qws
-*.rpt
 *.bak
-serv_req_info.txt
+greybox_tmp/
