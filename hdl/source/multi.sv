@@ -1,6 +1,6 @@
 //MULTI (Multiply immediate) operation
-//MSB of immediate is -2^0, LSB is 2^-3
-//MSB of register is -2^2, lSB is 2^0
+//MSB of immediate is -2^1, LSB is 2^-3
+//MSB of register is -2^7, lSB is 2^0
 `include "constants.sv"
 
 module multi(input logic signed `REG_SIZE register, input logic signed `IMM_SIZE immediate, output logic signed `REG_SIZE result);

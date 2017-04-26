@@ -7,9 +7,10 @@ import re
 import datetime
 import sys
 
-
 #Constant dictionary
-const_dict = dict()
+const_dict = dict([
+	('CONST_MOV_ZERO', 8),
+])
 
 #Label dictionary
 label_dict = dict()
@@ -96,6 +97,7 @@ def process_cmd(args, address):
     elif args[0] == 'MULTI':
         args[0] = 1
     else:
+        print(args[0])
         assert(False)
 
     # Process arguments. Note that no checking is made for format. labels and consts with same name etc.
@@ -135,11 +137,11 @@ def formatTuple(input):
     ident = format(input[0],'01b')
     reg1 = format(input[1], '03b')
     reg2 = format(input[2], '03b')
-    addr = format(input[3], '06b')
+    addr = format(input[3], '05b')
 
     retstr = ident + reg1 + reg2 + addr
 
-    assert(len(retstr) == 13)
+    assert(len(retstr) == 12)
 
     return retstr
 

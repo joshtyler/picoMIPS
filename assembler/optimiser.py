@@ -50,19 +50,19 @@ def jp_imp(args):
     return retstr
 
 
-# Format MV [src], [dest]
+# Format MOV [src], [dest]
 def mov_imp(args):
+	# From https://en.wikipedia.org/wiki/One_instruction_set_computer#Subtract_and_branch_if_less_than_or_equal_to_zero
+    constLbl = gen_label_name()
     retstr = "//Begin MOV implementation\n"
-    retstr += ("SUBLEQ " + args[2] + " " + args[2] + "\n")  # Clear r2
-    retstr += ("SUBLEQ " + args[1] + " Z\n")  # Set Z to -r1
-    retstr += ("SUBLEQ Z " + args[2] + "\n")  # Set r2 to -A (=r1)
-    retstr += "SUBLEQ Z Z \n"  # Clear Z
+    retstr += ("MULTI " + args[1] + " " + args[2] + " CONST_MOV_ZERO\n")  #r2 = r1 * 1
     retstr += "//End MOV implementation\n"
     return retstr
 
 
 # Format ADD [src], [dest]
 def add_imp(args):
+	# From https://en.wikipedia.org/wiki/One_instruction_set_computer#Subtract_and_branch_if_less_than_or_equal_to_zero
     retstr = "//Begin ADD implementation\n"
     retstr += ("SUBLEQ " + args[1] + " Z \n")  # Z = -r1
     retstr += ("SUBLEQ Z " + args[2] + "\n")  # r2 = r2 -Z = r2 + r1
@@ -78,9 +78,29 @@ def ldi_imp(args):
     retstr += "//End LDI implementation\n"
     return retstr
 
+# Format JLEZ [register to test], [address]
+# (jump if less than or equal to zero)
+def jlez_imp(args):
+    retstr = "//Begin JLEZ implementation\n"
+    retstr += ("SUBLEQ Z " + args[1] + " " + args[2] +  "\n")
+    retstr += "//End JLEZ implementation\n"
+    return retstr
 
+# Format JGZ [register to test], [address]
+# (jump if greater than zero)
+def jgz_imp(args):
+    label1 = gen_label_name()
+    retstr = "//Begin JGZ implementation\n"
+    retstr += ("JLEZ " + args[1] + " " + label1 +  "\n")  # If less than or equal to zero. Goto out
+    retstr += ("JP " + args[2] + "\n") # Otherwise jump to address
+    retstr += (label1 + ": \n")  # Out
+    retstr += "//End JGZ implementation\n"
+    return retstr
+	
 commands = {'JZ': jz_imp,
             'JNZ': jnz_imp,
+            'JLEZ': jlez_imp,
+            'JGZ': jgz_imp,
             'JP': jp_imp,
             'MOV': mov_imp,
             'ADD': add_imp,
