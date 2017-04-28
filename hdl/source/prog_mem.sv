@@ -23,7 +23,7 @@ module prog_mem (input logic clock, reset, enable, input logic `PROG_MEM_ADDR_SI
 				.clocken1 (1'b1),
 				.clocken2 (1'b1),
 				.clocken3 (1'b1),
-				.data_a ({12{1'b1}}),
+				.data_a ({17{1'b1}}),
 				.data_b (1'b1),
 				.eccstatus (),
 				.q_b (),

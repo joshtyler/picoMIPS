@@ -126,7 +126,7 @@ def process_cmd(args, address):
 
 		
 	# Append the address (as we're not using the program counter)
-	args.append(address)
+    args.append(address + 1)
 	
     assert(len(args) == 5)
 
@@ -141,11 +141,11 @@ def formatTuple(input):
     ident = format(input[0],'01b')
     reg1 = format(input[1], '03b')
     reg2 = format(input[2], '03b')
-    addr = format(input[3], '05b')
+    jpaddr = format(input[3], '05b')
+    addr = format(input[4], '05b')
+    retstr = ident + reg1 + reg2 + jpaddr + addr
 
-    retstr = ident + reg1 + reg2 + addr
-
-    assert(len(retstr) == 12)
+    assert(len(retstr) == 17)
 
     return retstr
 
