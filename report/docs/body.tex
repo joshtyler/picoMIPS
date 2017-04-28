@@ -1,43 +1,217 @@
 \section{Introduction}
 
+\review
 {
-	\color{red} \bfseries
 	State the objectives of the assignment. Summarise briefly your preparation work,  your experimental work,, and results achieved. Specifically, state which parts of the assignment were delivered according to the requirements and summarise any extensions to the basic specification you have carried out with references to the sections.  ( approx. 0.5 page).
 }
 
-\section{Instruction format, decoder design, program memory, and program counter}
+The objective of this project was to design and build a picoMIPS processor capable of performing an affine transform of a two dimensional coordinate. This is equivalent to the matrix transformation of Equation \ref{eq:affine-transform}
+\begin{equation}
+\begin{bmatrix}
+x_2\\
+y_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+A_{11} & A_{12}\\
+A_{21} & A_{22}
+\end{bmatrix}
+\begin{bmatrix}
+x_1\\
+y_1
+\end{bmatrix}
++
+\begin{bmatrix}
+B_1\\
+B_2
+\end{bmatrix}
+\label{eq:affine-transform}
+\end{equation}
 
+The goal of the exercise is to create a design as minimal as possible, but capable of implementing this affine transform.
+
+In preparation for the assignment I conducted research into minimal instruction set computers, and designed my system on paper. The design of the instruction set is Summarised in section \ref{sec:instructions}, and the design of the remainder of the system is discussed therein as well as in subsequent sections.
+
+As an extension exercise I wrote SystemVerilog code to convert the signed 8-bit words on the switches and LEDs to binary coded decimal and then display this using the seven segment displays present on the development board. This is discussed briefly in Section \ref{sec:implementation}.
+
+\review{Mention size tests and investigation into logic element usage}
+
+\section{Instruction format, decoder design, program memory, and program counter} \label{sec:instructions}
+
+\subsection{System overview}
+
+A block diagram showing my picoMIPS implementation is shown in Figure \ref{fig:final-proc-arch}. In this diagram, blue lines show address signals, red shows data signals, and green shows control signals. The cycle counter is a four bit, one hot encoded counter, and controls the flow of data across four clock cycles, which make up one instruction cycle. The four cycles are fetch, decode 1, decode 2, and execute. A timing diagram showing the execution of the processor across these cycles is shown in Figure \ref{fig:proc-timing-diagram}. During the fetch stage, the program counter is valid and so the new instruction will be fetched from the program memory on the next clock edge. During the two decode cycles, the processor retrieves the values of the two data registers from memory. Two cycles are necessary for this because the Cyclone IV memory architecture only support dual port \glspl{ram} and \glspl{rom}. Therefore two clock cycles must be used in order to read from two data addresses.
+
+During the execute cycle, the data values are valid, and so the ALU can calculate the result. The ALU is combinational, and so the branch flag and write data are valid on the next clock edge. This means that the program counter can be set to the new value, and the data can be written to the relevant register.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tikztimingtable}%[ xscale=0.8, yscale=1.5]
+		Clock			& 2L 16{2C} C \\
+		Cycle			& 2X 2{ 4D{Fetch} 4D{Decode 1} 4D{Decode 2} 4D{Execute}} D{}\\
+		PC				& 2X 16D{n} 16D{n+1}  D{} \\
+		Instruction		& 2X 4X 16D{Instruction[n]} 13D{Instruction[n+1]} \\
+		Register 1 Data	& 2X 12X 4D{Valid} 12X 4D{Valid} X \\
+		Register 2 Data	& 2X 12X 4D{Valid} 12X 4D{Valid} X \\
+		Write Enable	& 2X 12L 4H  12L 4H L \\
+		Branch			& 2X 12L 4D{Valid}  12L 4D{Valid} L \\
+		\extracode
+		\begin{pgfonlayer}{background}
+			\begin{scope}[semitransparent ,semithick]
+				\vertlines[darkgray,dotted]{2.0,6.0,...,36.0}
+			\end{scope}
+		\end{pgfonlayer}
+	\end{tikztimingtable}
+	\caption{Processor timing diagram}
+	\label{fig:proc-timing-diagram}
+\end{figure}
+
+\begin{figure}[ht]
+	\centering
+	\def \nodeDist{2.5cm}
+	
+	\tikzstyle{cycleBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centered, draw=black, fill=black!40]
+	\tikzstyle{normalBlock} = [cycleBlock] %Didn't end up using this in the end
+	\tikzstyle{arrowNml} = [thick,->,>=stealth]
+	\tikzstyle{arrowRev} = [thick,<-,>=stealth]
+	\tikzstyle{arrowDbl} = [thick,<->,>=stealth]
+	\tikzstyle{lineNml} = [thick]
+	\begin{tikzpicture}[node distance=\nodeDist, scale=0.7, every node/.style={transform shape}]
+	
+	\newcommand{\buswidth}[5]{\draw ([xshift=#4,yshift=#5] #1) node [#3=.6ex,] {#2} +(45:-.8ex) -- +(45:.8ex)};
+	
+
+	% program memory
+	\node (progMem) [normalBlock, anchor=south west, minimum height=8cm] at (0,0) {\shortstack{Program\\Memory}};
+	\draw [arrowRev, draw=blue] ( progMem.west) to node[above] {Address} ++(-\nodeDist,0) to ++(0,-0.25*\nodeDist - 2cm - 4cm) to ++(\nodeDist,0) coordinate(addrLine);
+	\buswidth{addrLine}{$5$}{below}{-0.25cm}{0cm};
+	
+	\draw [arrowNml, draw=blue] ( [yshift=-2cm] progMem.north east) to node[above] {  \shortstack{Register\\Address 1}} ++(\nodeDist,0);
+	\buswidth{progMem.north east}{$3$}{below}{0.25cm}{-2cm};
+	\draw [arrowNml, draw=blue] ( [yshift=-3cm] progMem.north east) to node[above] {  \shortstack{Register\\Address 2}} ++(\nodeDist,0);
+	\buswidth{progMem.north east}{$3$}{below}{0.25cm}{-3cm};
+	
+	\draw [arrowNml, draw=green] ( [yshift=2cm] progMem.south east) to node[above] {  \shortstack{Opcode}} ++(3*\nodeDist,0);
+	\buswidth{progMem.south east}{$1$}{below}{0.25cm}{2cm};
+	
+	% registers
+	\node (regs) [cycleBlock, minimum height=5cm, right=of progMem.north east, anchor=north west] {\shortstack{Registers}};
+	\draw [arrowNml, draw=red] ( [yshift=-1cm] regs.north east) to node[above] {  \shortstack{Register 1\\Data}} ++(\nodeDist,0);
+	\buswidth{regs.north east}{$8$}{below}{0.25cm}{-1cm};
+	\draw [arrowNml, draw=red] ( [yshift=-2cm] regs.north east) to node[above] {  \shortstack{Register 2\\Data}} ++(\nodeDist,0);
+	\buswidth{regs.north east}{$8$}{below}{0.25cm}{-2cm};
+	
+	\draw [arrowRev, draw=red] ( [yshift=-1cm] regs.north west) to node[above] {  \shortstack{Write\\Data}} ++(-0.5*\nodeDist,0)  to ++(0,0.5*\nodeDist) to ++(4*\nodeDist,0) to ++(0,-0.5*\nodeDist) to ++(-0.5*\nodeDist,0) coordinate(writeDataEnd);
+	\buswidth{writeDataEnd}{$8$}{below}{0.25cm}{0cm};
+	\draw [arrowRev, draw=green] ( [yshift=1cm] regs.south west) to node[above] {Cycle} ++(-0.5*\nodeDist,0);
+	\buswidth{regs.south west}{$4$}{below}{-0.5*\nodeDist +0.25cm}{1cm};
+	
+	% alu
+	\node (alu) [normalBlock, minimum height=8cm, right=of regs.north east, anchor=north west] {\shortstack{ALU}};
+	\draw [arrowRev, draw=red] ( [yshift=1cm] alu.south west) to node[above] {  \shortstack{Immediate}} ++(-1.5*\nodeDist,0) coordinate(aluLineHalfway);
+	\draw[lineNml] (aluLineHalfway) -- ++(-1.5*\nodeDist,0) coordinate(aluLineStart);
+	\buswidth{aluLineStart}{$5$}{below}{0.25cm}{0cm};
+	
+	% Program counter
+	\node (pc) [cycleBlock, minimum height=4cm, below= 0.25*\nodeDist of progMem.south, anchor=north] {\shortstack{Program\\Counter}};
+	\draw [arrowRev, draw=green] ( [yshift=1cm] pc.south east) to node[above] {Cycle} ++(0.5*\nodeDist,0);
+	\buswidth{pc.south east}{$4$}{below}{0.5*\nodeDist -0.25cm}{1cm};
+	\draw [arrowRev, draw=green] ( [yshift=2cm] pc.south east) to node[above] {Branch} ++(4.5*\nodeDist,0) to ++(0,0.25*\nodeDist +3cm) to ++(-0.5*\nodeDist,0) coordinate(branchEnd);
+	\buswidth{branchEnd}{$1$}{below}{0.25cm}{0cm};
+	\draw [arrowRev, draw=blue] ( [yshift=3cm] pc.south east) to node[above] {Branch Address} ++(1.5*\nodeDist,0) to ++(0,0.25*\nodeDist +2cm);
+	
+	% Cycle counter
+	\node (cycle) [cycleBlock, minimum height=1.5cm, above= 0.25*\nodeDist of progMem.north, anchor=south] {\shortstack{Cycle\\Counter}};
+	\draw [arrowNml, draw=green] (cycle.east) to node[above] {  \shortstack{Cycle}} ++(0.5*\nodeDist,0);
+	\buswidth{cycle.east}{$4$}{below}{0.25cm}{0cm};
+	
+	\end{tikzpicture}
+	\caption{Final processor architecture}
+	\label{fig:final-proc-arch}
+\end{figure}
+
+\subsection{System Level testing} \label{sec:sys-level-testing}.
+
+To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all possible inputs. 
+
+\subsection{Instruction Format}
+
+The processor uses 12 bit instructions. This breaks down into a one bit opcode, two 3 bit register addresses, and a 5 bit immediate / branch address, as shown in Figure \ref{fig:inst-format}. The opcode can be made one bit long because there are only two instructions in the processor, and therefore one bit is enough to differentiate them. The immediate / branch address bits can be shared across the two functions because the MULTI instruction uses an immediate but does not branch, whilst the SUBLEQ instruction does not use an immediate, but can branch. The details of why these two instructions were chosen, and the details of their implementation is given in Section \ref{sec:alu-design}.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabularx}{\textwidth}{r *{12}{|Y}}
+		Bit & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+		\hline
+		Purpose & {op-code} & \multicolumn{3}{|c|}{Reg. 1 Address} & \multicolumn{3}{|c|}{Reg. 2 Address} & \multicolumn{5}{|c}{Immediate / Branch Address} \\
+		
+	\end{tabularx}
+	\caption{Instruction Format and Assembler}
+	\label{fig:inst-format}
+\end{figure}
+
+A listing of the program used is given in Listing \ref{lst:main-prog}. This is a custom form of assembly code created for this project. Upon reading the source code, the reader will notice that the majority of assembly instructions used are not present as machine instructions on the processor architecture. This is because writing assembly code solely using \texttt{SUBLEQ} and \texttt{MULTI} instructions can be very confusing. For this reason a two-stage compilation toolchain was created using the Python programming language. The first stage takes each assembly instruction that doesn't map into a machine instruction, and re-writes it so that only \texttt{SUBLEQ} and \texttt{MULTI} instructions are used. This is performed by \texttt{optimiser.py}, and the second stage is to compile this assembly code into machine instructions. This is performed by \texttt{assembler.py}. The machine code output by the compilation toolchain is listed in Listing \ref{lst:main-prog-compiled}.
+
+The majority of instructions such as \texttt{MOV} and \texttt{ADD} have their conventional definitions, however there are some slightly more esoteric instructions, namely \texttt{JLEZ}, and \texttt{JGZ}. These are represent `jump if less than or equal to zero', and `jump if greater than or equal to zero' respectively. These instructions are used to poll switch 8. Initially the more conventional \texttt{JZ}, and \texttt{JNZ} (`jump if zero', and `jump if not zero') were used. The system worked with these instructions, however they require more \texttt{SUBLEQ} instructions to implement, and since the switch 8 register is guaranteed to be either $0x00$, or $0x01$ the simpler instructions are functionally equivalent.
+
+\subsection{Program Memory Design}
+The program memory block is very simple, it consists solely of a block of synchronous \gls{ram}\, initialised with the data from Listing \ref{lst:main-prog-compiled}. The \gls{ram} was inferred by creating an array of words, and then transferring the addressed word to the output on each rising clock edge, using a non blocking assignment within a rising clock edge \texttt{always} block. This inference approach was taken as opposed to using a dedicated Altera RAM library element because it allows the code to be portable between \gls{fpga} vendors, and an explicit instantiation was not required because compilation with Quartus reveals that the synthesis engine has correctly inferred \gls{ram} from this block.
+
+Due to its simplicity this block was not tested with an individual testbench, and the functionality of the block was verified during system level testing, as described in Section \ref{sec:sys-level-testing}.
+
+\subsection{Program Counter Design}
+The program counter consists of three elements: a register to hold the current value of the program counter, a combinational adder to calculate the next value of the program counter if the program does not branch, and a multiplexer to select between the branch address and next instruction. The selected address is clocked into the register on the clock edge after the execute cycle. This in turn allow the program memory to fetch the correct instruction.
+
+\review{This is wrong. We cannot use the RAM register because we cannot read it back, so we need a store of the current PC anyway}
+\review{Could mention consideration of storing the program counter in the program code itself}
+The register is not strictly necessary in this design in the sense that one could make use of the read enable and asynchronous clear features of the program counter's memory block. This would also remove the need for the `Fetch' cycle in the processor's execution. However the registers do not add to the cost figure of the design, since the logic cells are already being instantiated for the adder. In addition to this, the timing constraints of an asynchronous clear signal to the register input of the memory blocks are complex, and so likely to be violated by the use of a simple switch clear input.
+
+The program counter has a total utilisation of five logic elements for the logic cells containing the adder and counter, and a further multiplier for the multiplexer.
+
+Due to it's simplicity this block was tested using the system level testing, as described in Section \ref{sec:sys-level-testing}, rather than a dedicated testbench.
+
+
+\review
 {
-	\color{red} \bfseries
 	Provide a block diagram of your picoMIPS design showing the sizes of all the busses and modules.
 	
-	Describe your picoMIPS instruction format and the instructions you have implemented in your decoder. Give a listing of your program implemented in the Program Memory. You can show snippets of your source code. There is no need to show the full source code for all your modules in the report as the full source code must be submitted separately.  Do not copy any code or diagrams from the lectures and picoMIPS SystemVerilog files provided on the ELEC6016 notes site. Give your Modelsim testbenches and Modelsim results.  DO NOT make statements such as: “Figure 2 shows the simulation results of the module functioning correctly”.  Instead, explain the results shown in the figures to demonstrate that you understand how the tested modules work.  You can show RTL level diagrams from Quartus if you wish. (max 2.5 pages).
+	Describe your picoMIPS instruction format and the instructions you have implemented in your decoder.
+	Give a listing of your program implemented in the Program Memory. You can show snippets of your source code.
+	There is no need to show the full source code for all your modules in the report as the full source code must be submitted separately.
+	Do not copy any code or diagrams from the lectures and picoMIPS SystemVerilog files provided on the ELEC6016 notes site.
+	Give your Modelsim testbenches and Modelsim results.
+	DO NOT make statements such as: “Figure 2 shows the simulation results of the module functioning correctly”.
+	Instead, explain the results shown in the figures to demonstrate that you understand how the tested modules work.
+	You can show RTL level diagrams from Quartus if you wish. (max 2.5 pages).
 }
+
 
 \section{General Purpose Register file design, simulation and synthesis}
 
+The register block is the most complex block of the design. At its heart it uses a dual port \gls{ram} block (with one read port, and one write port) to access data. Reading data therefore uses two clock cyles, because the first register has to be read, and then the second has to be read subsequent to that. This limitation could be overcome by use of a triple port \gls{ram}. However this type of \gls{ram} would require twice as much memory, because two blocks essentially have to mirror eachother in parallel in order to provide the two read ports.
+
+\review{Could use tri-port RAM for this. Fill in once decision made.}
+
+
+\review
 {
-	\color{red} \bfseries
 	As above (max 1.5 page)
 }
 
-\section{Arithmetic Logic Unit and Mulitiplier Design}
-
+\section{Arithmetic Logic Unit and Mulitiplier Design} \label{sec:alu-design}.
+\review
 {
-	\color{red} \bfseries
 	 Explain the functions implemented in  your ALU and explain your testbench. Show Modelsim test results.  If you have implemented a hardware multiplier (or multipliers), explain your multiplier design and give Modelsim test results. State if your multiplier module synthesised as an embedded hardware multiplier.  (approx. 1.5- 2 pages)
 }
 
-\section{Altera DE0 implementation}
-
+\section{Altera DE0 implementation} \label{sec:implementation}
+\review
 {
-	\color{red} \bfseries
 	Explain how you tested your design after  programming the FPGA. In case you had to edit your original code and resynthesize – explain what you did.  ( approx. 1-2 pages)
 }
 
 \section{Conclusion}
-
+\review
 {
-	\color{red} \bfseries
 	State which objectives listed in your Introducton have been achieved. Calculate the cost figure of your design for synthesis on a Cyclone IV E.. Give your general  conclusion, comment on what you learnt.  Comment on ways to improve the design or extend it further.  ( approx.0.25 – 0.5 of a page)
 }
