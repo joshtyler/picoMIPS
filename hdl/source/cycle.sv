@@ -4,17 +4,20 @@
 
 module cycle(input logic clk, output logic `CYCLE_SIZE cycle);
 
-//Initialisation value - will be provided by bitstream
+logic `CYCLE_SIZE mem [2**(`CYCLE_WIDTH)-1:0];
+
 initial
-	cycle = '0;
+		cycle = '0;
+		
+initial
+begin
+	mem[0] = 1;
+	mem[1] = 2;
+	mem[2] = 0;
+end
 
 always @(posedge clk)
-begin
-	if(cycle == `CYCLE_WRITE)
-		cycle <= '0;
-	else
-		cycle <= cycle + 1;
+	cycle <= mem[cycle];
 
-end
 
 endmodule

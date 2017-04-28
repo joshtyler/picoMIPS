@@ -124,7 +124,11 @@ def process_cmd(args, address):
     if (args[0] == 0) and (len(args) == 3):
         args.append(address + 1)
 
-    assert(len(args) == 4)
+		
+	# Append the address (as we're not using the program counter)
+	args.append(address)
+	
+    assert(len(args) == 5)
 
     return tuple(args)
 
