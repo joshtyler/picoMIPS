@@ -2,15 +2,17 @@
 `define CONSTANTS_SV
 
 //Cycle constants
-`define CYCLE_WIDTH 4 //We use 1 hot encoding for this to save having to use a counter (we can just use a shift register)
-`define CYCLE_SIZE [`CYCLE_WIDTH-1:0]
-`define CYCLE_FETCH 0
-`define CYCLE_DEC1 1
-`define CYCLE_DEC2 2 
-`define CYCLE_EXEC 3
+//This is a counter. DEC is 00, EXEC is 01, Write is 10
+//Since nothing needs to be enabled on DEC, we can treat the system as a one hot counter
+//This saves logic elements
+//`define CYCLE_DEC
+`define CYCLE_WIDTH 2
+`define CYCLE_SIZE [`CYCLE_WIDTH-1:0] 
+`define CYCLE_EXEC 0
+`define CYCLE_WRITE 1
 
 //Program memory constants
-`define PROG_MEM_WIDTH 12
+`define PROG_MEM_WIDTH 17
 `define PROG_MEM_SIZE [`PROG_MEM_WIDTH-1:0]
 `define PROG_MEM_DEPTH 31
 `define PROG_MEM_DEPTH_SIZE [`PROG_MEM_DEPTH-1:0]
@@ -25,10 +27,11 @@
 `define REG_ADDR_WIDTH 3
 `define REG_ADDR_SIZE [`REG_ADDR_WIDTH-1:0]
 
+
 //Note that this is two bigger than it needs to be due to the register memory shadowing switches
-//This is necessary for simulation becuause otherwise the multiplexer does not work for the switch addresses (as it has X inputs and so gives an X output)
-//Perhaps this could be optimised at some point
-`define REG_DEPTH 8 
+//This is necessary because it is legal to write to the switches, so we need to have actual memory there.
+`define REG_DEPTH 8
+
 `define REG_DEPTH_SIZE [`REG_DEPTH-1:0]
 
 `define REG_R1_ADDR 0
