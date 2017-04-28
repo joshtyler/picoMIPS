@@ -87,7 +87,6 @@ regs regs0
 	.we(cycle[`CYCLE_EXEC]),
 	.reg1_addr(reg1_addr),
 	.reg2_addr(reg2_addr),
-	.wr_addr(reg2_addr), //We always want to write back to reg 2
 	.wr_data(wr_data),
 	.switches(SW[$high(SW)-1:$low(SW)]), //All switches except highest
 	.reg_1(reg1),

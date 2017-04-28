@@ -2,13 +2,13 @@
 
 `include "constants.sv"
 
-module regs(input logic clk, we, input logic `REG_ADDR_SIZE reg1_addr, reg2_addr, wr_addr, input logic `REG_SIZE wr_data, input logic [`SWITCH_WIDTH-2:0] switches, output logic `REG_SIZE reg_1, reg_2, output logic `LED_SIZE leds);
+module regs(input logic clk, we, input logic `REG_ADDR_SIZE reg1_addr, reg2_addr, input logic `REG_SIZE wr_data, input logic [`SWITCH_WIDTH-2:0] switches, output logic `REG_SIZE reg_1, reg_2, output logic `LED_SIZE leds);
 
 //LED register. This shadows maind memory to provide an output to LEDs
 //Note we write in teh EXEC cycle
 logic led_reg_en;
 always_comb
-	led_reg_en = we && wr_addr == `REG_LED_ADDR;
+	led_reg_en = we && reg2_addr == `REG_LED_ADDR;
 register #(.WIDTH(`REG_WIDTH )) led_reg
 (
 	.clk(clk),
@@ -25,10 +25,9 @@ regs_mem mem0
 (
 	.clk(clk),
 	.d(wr_data),
-	.rd_addr1(reg1_addr),
-	.rd_addr2(reg2_addr),
-	.wr_addr(wr_addr),
-	.we(we),
+	.addr1(reg1_addr),
+	.addr2(reg2_addr),
+	.we2(we),
 	.q1(rd_data1),
 	.q2(rd_data2)
 );
