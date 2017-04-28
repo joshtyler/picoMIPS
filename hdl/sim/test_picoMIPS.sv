@@ -49,21 +49,6 @@ begin
 end
 endfunction
 
-//Setup program memory to clear Z and load 1 into the LED register
-task clearZandLoadLED;
-begin
-	dut.mem0.memory[0] = generateInstruction(0, `REG_Z_ADDR, `REG_Z_ADDR, 1); //Clear Z register
-	dut.mem0.memory[1] = generateInstruction(1, `REG_U_ADDR, `REG_LED_ADDR, 1); //Load 1 into LEDs
-end
-endtask
-
-//Load counting test program
-task countingTest;
-begin
-	$readmemb("../../asm_progs/compiled/counter.bin", dut.mem0.memory);
-end
-endtask
-
 //By default, verilog does not truncate for rounding
 //This function implements multiplication with truncated result for rounding
 function logic signed `REG_SIZE multiplyTruncated;

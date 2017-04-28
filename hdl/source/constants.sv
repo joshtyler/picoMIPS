@@ -2,12 +2,14 @@
 `define CONSTANTS_SV
 
 //Cycle constants
-`define CYCLE_WIDTH 4 //We use 1 hot encoding for this to save having to use a counter (we can just use a shift register)
-`define CYCLE_SIZE [`CYCLE_WIDTH-1:0]
-`define CYCLE_FETCH 0
-`define CYCLE_DEC1 1
-`define CYCLE_DEC2 2 
-`define CYCLE_EXEC 3
+//This is a counter. DEC is 00, EXEC is 01, Write is 10
+//Since nothing needs to be enabled on DEC, we can treat the system as a one hot counter
+//This saves logic elements
+//`define CYCLE_DEC
+`define CYCLE_WIDTH 2
+`define CYCLE_SIZE [`CYCLE_WIDTH-1:0] 
+`define CYCLE_EXEC 0
+`define CYCLE_WRITE 1
 
 //Program memory constants
 `define PROG_MEM_WIDTH 12

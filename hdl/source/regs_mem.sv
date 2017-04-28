@@ -1,8 +1,9 @@
 //Memory component of registers
+//Triple port
 
 `include "constants.sv"
 
-module regs_mem(input logic clk, input logic `REG_SIZE d, input logic `REG_ADDR_SIZE rd_addr, wr_addr, input logic we, output logic `REG_SIZE q);
+module regs_mem(input logic clk, input logic `REG_SIZE d, input logic `REG_ADDR_SIZE rd_addr1, rd_addr2, wr_addr, input logic we, output logic `REG_SIZE q1, q2);
 
 logic `REG_SIZE mem `REG_DEPTH_SIZE;
 
@@ -20,7 +21,8 @@ begin
 	if(we)
 		mem[wr_addr] <= d;
 
-	q <= mem[rd_addr]; //Note that q doesn't get d this clock cycle
+	q1 <= mem[rd_addr1]; //Note that q doesn't get d this clock cycle
+	q2 <= mem[rd_addr2];
 
 end
 

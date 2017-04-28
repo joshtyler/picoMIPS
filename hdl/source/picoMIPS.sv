@@ -64,7 +64,7 @@ pc pc0
 	.clk(clk),
 	.reset(reset),
 	.branch(branch),
-	.cycle(cycle),
+	.enable(cycle[`CYCLE_EXEC]),
 	.branch_addr(branch_addr),
 	.addr(prog_mem_addr)
 );
@@ -72,6 +72,8 @@ pc pc0
 //Program memory
 prog_mem mem0
 (	.clock(clk),
+	.reset(reset),
+	.enable(cycle[`CYCLE_WRITE]),
 	.addr(prog_mem_addr),
 	.data(prog_mem_data)
 );
@@ -80,7 +82,7 @@ prog_mem mem0
 regs regs0
 (
 	.clk(clk),
-	.cycle(cycle),
+	.we(cycle[`CYCLE_EXEC]),
 	.reg1_addr(reg1_addr),
 	.reg2_addr(reg2_addr),
 	.wr_addr(reg2_addr), //We always want to write back to reg 2

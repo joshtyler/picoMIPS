@@ -185,5 +185,5 @@ inputFile = io.open(infilename, 'r')
 lst = get_numerical_data(inputFile)
 inputFile.close()
 
-outputHex(outfilename, lst, formatTuple)
+outputAlteraMif(outfilename, lst, formatTuple)
 

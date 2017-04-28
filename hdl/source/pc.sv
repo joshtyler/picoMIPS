@@ -2,7 +2,7 @@
 
 `include "constants.sv"
 
-module pc(input logic clk, reset, branch, input logic `CYCLE_SIZE cycle, input logic `PROG_MEM_ADDR_SIZE branch_addr, output logic `PROG_MEM_ADDR_SIZE addr);
+module pc(input logic clk, reset, branch, enable, input logic `PROG_MEM_ADDR_SIZE branch_addr, output logic `PROG_MEM_ADDR_SIZE addr);
 
 logic `PROG_MEM_ADDR_SIZE ctr;
 logic `PROG_MEM_ADDR_SIZE selected_addr;
@@ -28,7 +28,7 @@ always @(posedge clk, posedge reset)
 begin
 	if(reset)
 		ctr <= '0;
-	else if(cycle[`CYCLE_EXEC])
+	else if(enable) //Increment in decode cycle, so that the new value is ready in EXEC cycle
 		ctr <= selected_addr;
 end
 
