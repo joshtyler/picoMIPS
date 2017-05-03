@@ -14,6 +14,9 @@
 % Natbib references
 \usepackage[numbers]{natbib}
 
+%Colour
+\usepackage[dvipsnames]{xcolor}
+
 % Hyperref:
 % This package makes all references within your document clickable. By default, these references will become boxed and colored. This is turned back to normal with the \hypersetup command below.
 \usepackage[pdfpagelabels]{hyperref} %pdfpagelabels allows page numbers such as i and ii in pdf reader
@@ -22,8 +25,9 @@
 \usepackage{etoolbox} %Let's let bibliography be ragged right to avoid typesetting problems
 \apptocmd{\thebibliography}{\raggedright}{}{}
 
-%Colour
-\usepackage[dvipsnames]{xcolor}
+%\usepackage{pgfplotstable}
+%\pgfplotsset{compat=1.12} %Compile the same on everything
+
 
 %Appendix Handling
 \usepackage[titletoc,title]{appendix}
@@ -58,14 +62,16 @@
 %\tikzexternalize
 
 % Pretty tables 
-\usepackage{booktabs}
+\usepackage{tabularx, booktabs}
+\renewcommand{\tabularxcolumn}[1]{>{\small}m{#1}} %Vertically centre with X
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+%\newcolumntype{Y}{}
 
 % Caption. For better looking captions the captions.
 \usepackage{caption}
 \usepackage{subcaption}
 
-%Timing diagrams
-\usepackage{tikz-timing}[2011/01/09]
+
 
 %Listings
 \usepackage{listings,chngcntr}
@@ -81,6 +87,13 @@
 	stringstyle=\color{red}, % string color
 	basicstyle=\small %normal font size
 }
+
+\lstdefinelanguage{picoASM}{
+	morekeywords = { CONST, JLEZ, JZ, JGZ, JNZ, JP, MOV, LDI, ADD, MULTI},
+	sensitive=false,
+	morecomment=[l]{//},
+}
+
 %Make heading say "list of listings", not just "listings"
 \renewcommand\lstlistlistingname{List of Listings}
 
@@ -100,3 +113,12 @@
 
 %Allow floatbarrier
 \usepackage{placeins}
+
+%Timing diagrams
+\usepackage{tikz-timing}[2011/01/09]
+
+%Review command for red text
+\newcommand{\review}[1]
+{
+	{\color{red} \bfseries #1}
+}
