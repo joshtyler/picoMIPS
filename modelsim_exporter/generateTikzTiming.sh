@@ -2,11 +2,11 @@
 
 SCRIPT=modelsim2latex/ms2tt
 
-INPUT_BASE=./input/
+INPUT_BASE=../hdl/sim/results/
 
-FILES=("test_picoMIPS" "test_regs")
+FILES=("test_bin_to_bcd" "test_multi" "test_multiplexer" "test_picoMIPS" "test_regs")
 
-OUTPUT_BASE=./output/
+OUTPUT_BASE=../report/figs/timing/
 
 
 # ${#array[@]} is the number of elements in the array

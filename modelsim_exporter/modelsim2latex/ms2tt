@@ -89,13 +89,13 @@ class LatexOutput :
         def __init__(self, dataformat, datachanges) :
                 self.dataformat = dataformat
                 self.bitconv = {'1':'H','0':'L','U':'X','Z':'Z','X':'X'}
-                self.xscale = 35/datachanges # magic constant found by try'n'error
+                self.xscale = 2 #(26/datachanges) # magic constant found by try'n'error
         def out_mwe(self, end) :
                 return ('\\documentclass[a4paper,DIV14]{scrartcl}\n\\usepackage[ngerman]{babel}\n\\usepackage{tikz-timing}[2009/12/09]\
                 \n\n\\begin{document}\n\\begin{figure}[ht!]\n' if not end else '\\caption{caption}\n\\label{label}\n\\end{figure}\n\\end{document}')
         def out_timbp(self, end, grid) :
                 return \
-                ('\\begin{tikztimingtable} [timing/lslope=0,timing/dslope=0,timing/zslope=0,xscale='+str('{:.1f}'.format(self.xscale))+',thick]' if not end else\
+                ('\\begin{tikztimingtable} [xscale='+str('{:.1f}'.format(self.xscale))+']' if not end else\
                  ('\\extracode\n\\begin{pgfonlayer}{background}\n\t\\vertlines[gray!40]{}\n\\end{pgfonlayer}\n' if grid else '')  + '\\end{tikztimingtable}')
         @staticmethod
         def isnum(s) :
@@ -117,7 +117,7 @@ class LatexOutput :
                         else :
                                 return vec
 
-                out = [(self.bitconv[s] if len(s)==1 else ('D{'+(bin(_conv_vector(s)) if self.dataformat=='bin' else str(hex(_conv_vector(s))))[2:]+'}' \
+                out = [(self.bitconv[s] if len(s)==1 else ('D{'+(bin(_conv_vector(s)) if self.dataformat=='bin' else '0x'+str(hex(_conv_vector(s))))[2:]+'}' \
                         if self.isnum(_conv_vector(s)) else 'U')) for s in sigdata]
                 return (out if len(sigdata[0])==1 else [str(sum(1 for _ in g))+(k if self.dataformat!='none' else sub('{.*?}','{}',k)) for k,g in groupby(out)])
 
