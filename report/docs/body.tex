@@ -1,11 +1,16 @@
-\section{Introduction}
+\section{Introduction} \label{sec:intro}
 
-\review
-{
-	State the objectives of the assignment. Summarise briefly your preparation work,  your experimental work,, and results achieved. Specifically, state which parts of the assignment were delivered according to the requirements and summarise any extensions to the basic specification you have carried out with references to the sections.  ( approx. 0.5 page).
-}
+This project relates to the design and implementation of a picoMIPS processor. The objectives are:
+\begin{enumerate}
+	\item Design of a picoMIPS processor, capable of executing an affine transform. \label{obj:design}
+	\item Implementation of the designed processor in SystemVerilog. \label{obj:imp}
+	\item Verification of the SystemVerilog model, by simulation. \label{obj:verif}
+	\item Validation of the synthesised SystemVerilog processor. \label{obj:valid}
+	\item Minimising the resources used by the synthesised processor design. \label{obj:minimal}
+\end{enumerate}
 
-The objective of this project was to design and build a picoMIPS processor capable of performing an affine transform of a two dimensional coordinate. This is equivalent to the matrix transformation of Equation \ref{eq:affine-transform}
+The affine transform which the processor is to execute can be represented by Equation \ref{eq:affine-transform}. A assembly program was written to implement this, and the program was then translated to machine code using a custom assembler written for the purpose.
+
 \begin{equation}
 \begin{bmatrix}
 x_2\\
@@ -28,10 +33,10 @@ B_2
 \label{eq:affine-transform}
 \end{equation}
 
-The goal of the exercise is to create a design as minimal as possible, but capable of implementing this affine transform. The size of the implementation is defined by the cost figure of Equation \ref{eq:cost}.
+The minimalisation objective, objective \ref{obj:minimal} is quanified by by the cost figure of Equation \ref{eq:cost}.
 
 \begin{equation}
-	\text{Cost} = [\text{No. of Logic Elements}] + \max([\text{No. of 9bit Multipliers}] -2, 0) + \frac{ [\text{Bits of RAM}]}{1024} \times 30
+	\text{Cost} = [\text{No. of Logic Elements}] + \max([\text{No. of 9-bit Multipliers used}] -2, 0) + \frac{ [\text{kBits of RAM}]}{1024} \times 30
 	\label{eq:cost}
 \end{equation}
 
@@ -42,37 +47,21 @@ As part of this preparation I investigated the structure of Altera logic blocks,
 As an extension exercise I wrote SystemVerilog code to convert the signed 8-bit words on the switches and LEDs to binary coded decimal and then display this using the seven segment displays present on the development board. This is discussed briefly in Section \ref{sec:implementation}.
 
 
-\section{Instruction format, decoder design, program memory, and program counter} \label{sec:instructions}
+\section{System Design and Verification} \label{sec:design-verif}
 
-\subsection{System overview}
+\subsection{Overview} \label{sec:sys-overview}
 
-A block diagram showing my picoMIPS implementation is shown in Figure \ref{fig:final-proc-arch}. In this diagram, blue lines show address signals, red shows data signals, and green shows control signals.
+A block diagram showing my picoMIPS implementation is shown in Figure \ref{fig:final-proc-arch}. In this diagram, blue lines represent address signals, red represents data signals, and green represents control signals. Each block in this diagram represents a SystemVerilog module in the design, and each module has been annotated with the bus width of all of the signals into and out of it.
 
-The cycle counter has three states, and controls the flow of data across four clock cycles, which make up one instruction cycle. The counter uses a one hot encoding, with the zero state also valid. This means that no decoder is necessary for states not encoded as zero.
+The cycle counter defines the current stage of instruction execution. The processor is not pipelined, so the cycle counter controls which parts of the processor are active on any given clock cycle. The counter has three states, decode, execute, and write, which make up one instruction cycle.
 
-The three cycles are decode, execute, and write. A timing diagram showing the execution of the processor across these cycles is shown in Figure \ref{fig:proc-timing-diagram}. During the decode stage, the new instruction is valid, and so it can be decoded, and the register values can be fetched from \gls{ram}. During the execute stage, the register values have been fetched from \gls{ram} and so the \gls{alu} can perform the operation. During the write cycle the data produced by the \gls{alu} is written back to \gls{ram}. A cycle is necessary for this because the \gls{ram} blocks inside the Cyclone IV \gls{fpga} do not support read during write with new data, so a cycle is necessary to ensure that the register value is valid for the decode cycle.
+The program counter stores the instructions which make up the program, and on each instruction cycle it presents the instruction pointed to by it's address input to the processor.
 
-\begin{figure}[ht]
-	\centering
-	\begin{tikztimingtable}%[ xscale=0.8, yscale=1.5]
-		Clock			& L 12{2C} C \\
-		Cycle			& D{} 2{ 4D{Decode} 4D{Execute} 4D{Write}} D{}\\
-		PC				& D{} 2{4X 8D{Valid}}  X \\
-		Instruction		& D{} 12D{Instruction[n]} 12D{Instruction[n+1]} D{} \\
-		Register 1 Data	& X 2{ 4X 8D{Valid}} X \\
-		Register 2 Data	& X 2{ 4X 8D{Valid}} X \\
-		Write Enable	& L 2{4L 4H  4L} L \\
-		Branch			& L 2{4L 8D{Valid} } L \\
-		\extracode
-		\begin{pgfonlayer}{background}
-			\begin{scope}[semitransparent ,semithick]
-				\vertlines[darkgray,dotted]{1.0,5.0,...,27.0}
-			\end{scope}
-		\end{pgfonlayer}
-	\end{tikztimingtable}
-	\caption{Processor timing diagram}
-	\label{fig:proc-timing-diagram}
-\end{figure}
+The register block contains a small amount of storage necessary for program execution. Two registers are read per instruction cycle, and the result of the \gls{alu} operation is written back to the second register.
+
+The \gls{alu} performs the requested operations on the input registers, and presents the result to the rest of the processor so that the appropriate action can be carried out.
+
+The final block is the program address multiplexer. This block is responsible for presenting the program memory with either the next address, or a branch address depending on the \gls{alu} result. In a traditional processor, the next address would be calculated and stored by a program counter. This processor uses a slightly different approach and stores the next address is stored in the program code instead. The reason for this choice is that it contributes less to the cost function. The processor uses 5 bit addresses, and therefore a 5 bit counter would be needed. This would require 5 logic elements, which is a cost of 5. There are 31 instructions in the main program, and so the cost of adding 5 bits to each one is $\frac{31 \times 5}{1024}\times 30 = 4.54$, therefore it is cheaper to not have a dedicated program counter.
 
 \begin{figure}[ht]
 	\centering
@@ -144,17 +133,57 @@ The three cycles are decode, execute, and write. A timing diagram showing the ex
 	\label{fig:final-proc-arch}
 \end{figure}
 
-\subsection{System Level testing} \label{sec:sys-level-testing}.
+\subsection{Cycle Counter Design} \label{sec:cycle-design}
 
-To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all possible inputs. 
+As mentioned in Section \ref{sec:sys-overview}, the counter has three states. This is represented using a one hot encoding, with the zero state also valid. This arrangement means that the counter uses the same number of bits than the equivalent binary counter. Careful assignment of state encodings means that no decoder is necessary for decoding the current cycle anywhere in the design. This is possible because no signals need to be asserted in the decode state, and so this state can be encoded as zero.
 
-\subsection{Instruction Format} \label{sec:inst-format}
+A timing diagram showing the execution of the processor across these cycles is shown in Figure \ref{fig:proc-timing-diagram}. During the decode stage, the new instruction is valid, and so it can be decoded, and the register values can be fetched from \gls{ram}. During the execute stage, the register values have been fetched from \gls{ram} and so the \gls{alu} can perform the operation. During the write cycle the data produced by the \gls{alu} is written back to \gls{ram}. A cycle is necessary for this because the \gls{ram} blocks inside the Cyclone IV \gls{fpga} do not support read during write with new data, so a cycle is necessary to ensure that the register value is valid for the decode cycle.
 
-The processor uses 17 bit instructions. This breaks down into a one bit opcode, two 3 bit register addresses, a 5 bit immediate / branch address, and a 5 bit value to store the next address as shown in Figure \ref{fig:inst-format}.
+\begin{figure}[ht]
+	\centering
+	\begin{tikztimingtable}%[ xscale=0.8, yscale=1.5]
+		Clock			& L 12{2C} C \\
+		Cycle			& D{} 2{ 4D{Decode} 4D{Execute} 4D{Write}} D{}\\
+		PC				& D{} 2{4X 8D{Valid}}  X \\
+		Instruction		& D{} 12D{Instruction[n]} 12D{Instruction[n+1]} D{} \\
+		Register 1 Data	& X 2{ 4X 8D{Valid}} X \\
+		Register 2 Data	& X 2{ 4X 8D{Valid}} X \\
+		Write Enable	& L 2{4L 4H  4L} L \\
+		Branch			& L 2{4L 8D{Valid} } L \\
+		\extracode
+		\begin{pgfonlayer}{background}
+			\begin{scope}[semitransparent ,semithick]
+				\vertlines[darkgray,dotted]{1.0,5.0,...,27.0}
+			\end{scope}
+		\end{pgfonlayer}
+	\end{tikztimingtable}
+	\caption{Processor timing diagram}
+	\label{fig:proc-timing-diagram}
+\end{figure}
+
+\subsection{Instruction and Program Design} \label{sec:inst-format}
+The processor is capable of performing two instructions tabulated in Table \ref{tbl:insts}. \texttt{SUBLEQ} was chosen as the primary instruction because it is Turing complete by itself, so can execute any program. Using solely \texttt{SUBLEQ} instructions does have a downside however. Executing a multiply operation would require many lines of code, and so would take a large amount of time, as well as a lot of program memory. For this reason a second instruction \texttt{MULTI} is also used. This instruction also gives a method of loading immediates (by multiplying by $1$), which would require an additional multiplexer and bit in the instruction in a \texttt{SUBLEQ} only system.
+
+\begin{table}[ht]
+	\centering
+	\caption{Instructions}
+	\label{tbl:insts}
+	\begin{tabular}{l  l l}
+		\toprule
+		Mnemonic & Mathematical operation & English Description \\
+		\midrule
+		\texttt{SUBLEQ} & $\text{regs}[b] = \text{regs}[b] - \text{regs}[a];$ & \multirow{2}{0.35\textwidth}{Subtract and branch if less than, or equal to, zero.} \\
+		& $if(\text{regs}[b] \leq 0) \text{ branch};$ & \\
+		\midrule
+		\texttt{MULTI} & $\text{regs}[b] = \text{regs}[a] \times \text{Immediate};$ & Multiply immediate.  \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The processor uses 17 bit instructions. This breaks down into a one bit opcode, two 3 bit register addresses, a 5 bit immediate / branch address, and a 5 bit value to store the next address, as shown in Figure \ref{fig:inst-format}.
 
 The opcode can be made one bit long because there are only two instructions in the processor, and therefore one bit is enough to differentiate them. The immediate / branch address bits can be shared across the two functions because the MULTI instruction uses an immediate but does not branch, whilst the SUBLEQ instruction does not use an immediate, but can branch. The details of why these two instructions were chosen, and the details of their implementation is given in Section \ref{sec:alu-design}.
 
-The next address is stored in the program code to remove the need for an program counter. The reason for this choice is that it contributes less to the cost function. The program code uses 5 bit addresses, and therefore a 5 bit counter would be needed. This would require 5 logic elements, which is a cost of 5. There are 31 instructions in the main program, and therefore the cost of adding 5 bits to each one is $\frac{31 \times 5}{1024}\times 30 = 4.54$, therefore it is cheaper to not have a dedicated program counter.
 
 \begin{figure}[ht]
 	\centering
@@ -180,47 +209,56 @@ Initially the \gls{rom} was inferred by creating an array of words, and then tra
 Due to its simplicity this block was not tested with an individual testbench, and the functionality of the block was verified during system level testing, as described in Section \ref{sec:sys-level-testing}.
 
 \subsection{Program Address Multiplexer Design}
-Initially a program counter was used in the design, implemented as a 5 bit counter and multiplexer. However, as discussed in Section \ref{sec:inst-format}, the next address was later stored in the program counter \gls{rom}. This means that only a multiplexer, which multiplexes the address of the program memory between the next address and branch address is necessary.
+The multiplexer used to multiplex between the next address and branch address is not implemented using a traditional structure, instead a multiplier is used.
 
-Due to it's simplicity this block was tested using the system level testing, as described in Section \ref{sec:sys-level-testing}, rather than a dedicated testbench.
+The reason for this choice is that an $n$ bit multiplexer requires $n$ logic blocks for a traditional implementation, however using hardware multipliers, one can implement up to a $9$ bit multiplexer using a single $18 \times 18$ hardware multiplexer. This would represent a cost of $2$ (because an $18 \times 18$ multiplexer is formed of two $9\times9$ multipliers).
+
+The operation of the multiplexer is illustrated by Figure \ref{fig:mux-operation}. If the two words to be multiplexed $a$ and $b$ are concatenated to a single multiplier input, and a single bit is set in the second word, then the input can be shifted by a set amount. Setting the second input to either $1$ or $1 << (\text{Word Width})$, therefore acts as a multiplexer if we observe the output bits from $[(\text{Word Width}) \times 2: (\text{Word width}) + 1]$ we have effectively created a multiplexer.
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabular}{r *{8}{|c}}
+		Input & $b[3]$ & $b[2]$ & $b[1]$ & $b[0]$ & $a[3]$ & $a[2]$ & $a[1]$ & $a[0]$ \\
+		Sel & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $0$ & $1$  \\
+		Result & \shadeCell $b[3]$ & \shadeCell $b[2]$ & \shadeCell $b[1]$ & \shadeCell $b[0]$ & $a[3]$ & $a[2]$ & $a[1]$ & $a[0]$ \\
+		\midrule
+		Input & $b[3]$ & $b[2]$ & $b[1]$ & $b[0]$ & $a[3]$ & $a[2]$ & $a[1]$ & $a[0]$ \\
+		Sel & $0$ & $0$ & $0$ & $1$ & $0$ & $0$ & $0$ & $0$  \\
+		Result & \shadeCell $a[3]$ & \shadeCell $a[2]$ & \shadeCell $a[1]$ & \shadeCell $a[0]$ & $0$ & $0$  & $0$  & $0$  \\
+	\end{tabular}
+	\caption{4-bit Multiplexer Operation}
+	\label{fig:mux-operation}
+\end{figure}
+
+This multiplexer was designed as a parametric model, so that it can be used as the program address multiplexer, as well as elsewhere in the design.
 
 
-\review
-{
-	Provide a block diagram of your picoMIPS design showing the sizes of all the busses and modules.
-	
-	Describe your picoMIPS instruction format and the instructions you have implemented in your decoder.
-	Give a listing of your program implemented in the Program Memory. You can show snippets of your source code.
-	There is no need to show the full source code for all your modules in the report as the full source code must be submitted separately.
-	Do not copy any code or diagrams from the lectures and picoMIPS SystemVerilog files provided on the ELEC6016 notes site.
-	Give your Modelsim testbenches and Modelsim results.
-	DO NOT make statements such as: “Figure 2 shows the simulation results of the module functioning correctly”.
-	Instead, explain the results shown in the figures to demonstrate that you understand how the tested modules work.
-	You can show RTL level diagrams from Quartus if you wish. (max 2.5 pages).
-}
+\subsubsection{Testing}
+\review{Fill in}
 
 
-\section{General Purpose Register file design, simulation and synthesis}
-
-\subsection{Register Layout}
+\subsection{Register Design}
+\subsubsection{Layout}
 
 The register block is the most complex block of the design. At its heart it uses a dual port \gls{ram} block (with one dedicated read port, and one read/write port) to access data. Use of this configuration allows both registers to be read in a single clock cycle, as shown by Figure \ref{fig:proc-timing-diagram}. It should be noted however that the \gls{ram} inside the Cyclone IV \gls{fpga} does not support reading of new data during write, and so this is why there is a dedicated write cycle in the processors execution. Removal of this would result in incorrect data being read if an instruction requested the data from a register that was written to in the previous clock cycle.
 
-The memory map of the registers is shown in Figure \ref{fig:reg-map}. Registers R1--R4 are general purpose computation registers. These are entirely application specific registers, and both reading and writing is legal for any of them. The contents of R4, however, does also map to the \glspl{led} on the \glspl{fpga} development board.
+The memory map of the registers is shown in Table \ref{tbl:reg-map}. Registers R1--R4 are general purpose computation registers. These are entirely application specific registers, and both reading and writing is legal for any of them. The contents of R4, however, does also map to the \glspl{led} on the \glspl{fpga} development board.
 
 The U register stands for unity. This register is guaranteed to hold the constant necessary for an immediate to be loaded directly into a register using the \texttt{MULTI} command. This is necessary because by default immediates are treated as being a fractional constant, as discussed in Section \ref{sec:alu-design}. It is forbidden for any program to write to this value, as doing so will break the \texttt{LDI} (load immediate) command. The value of this register is initialised by the bitstream only, and resetting the processor using the reset switch will not reset its value. It should be noted that writing to this register is not prevented in hardware, but it is forbidden for any program to do so.
 
 The Z register stands for zero. The value of this register is kept at zero, and writing to it should be done with extreme caution. Many of the higher level assembly commands internally rely on this register being zero when they are replaced with calls to \texttt{SUBLEQ}, and \texttt{MULTI}. Writing to Z, however, is not forbidden entirely as many of these higher level commands use it as a general purpose computation register, but they all guarantee to clear Z back to zero before exiting. Z is not initialised to zero by the bitstream, but instead the first command of the program must be \texttt{SUBLEQ Z Z} in order to clear it. This approach is taken so that the processor still functions correctly if it is reset using the reset switch whilst Z is non-zero.
 
 The SW07 and SW8 registers are different from the others in that they do not map to internal storage in the \gls{fpga}. When the program attempts to read their value the value of switches 0--7, or switch 8 is returned instead, this is achieved by multiplexing the data outputs of the register bank. There do exist, however, registers inside the register memory at the addresses of the switch registers, this is because writing to the SW07 and SW8 registers is legal, but has no effect, physical registers need to exist in order to avoid an out of range write.
-\review{Do they? Maybe I can reduce my register size slightly?}
 
 
-\begin{figure}[ht]
+\begin{table}[ht]
 	\centering
+	\caption{Register map}
+	\label{tbl:reg-map}
 	\begin{tabular}{r | l}
+		\toprule
 		Address & Mnemonic \\
-		\hline
+		\midrule
 		0x0	& R1 \\
 		0x1	& R2 \\
 		0x2	& R3 \\
@@ -229,12 +267,11 @@ The SW07 and SW8 registers are different from the others in that they do not map
 		0x5	& Z \\
 		0x6	& SW07 \\
 		0x7	& SW8 \\
+		\bottomrule
 	\end{tabular}
-	\caption{Register map}
-	\label{fig:reg-map}
-\end{figure}
+\end{table}
 
-\subsection{Register Implementation}
+\subsubsection{Implementation}
 The registers are implemented as shown in Figure \ref{fig:reg-mem-arch}. The main block is the register memory block, this is a block of true dual port \gls{ram}. Data 1 is set to the value of the data stored at address 1 on each rising clock edge, and data 2 is set to the value of the data stored at address 2 if the write enable is false, otherwise the value stored at address 2 is replaced with the write data.
 
 The \gls{led} register allows mirrors register R4 in the main memory bank, but allows the \glspl{led} to be constantly driven.
@@ -318,20 +355,14 @@ The switch multiplexers are three way multiplexers that multiplex between the re
 	\label{fig:reg-mem-arch}
 \end{figure}
 
-\review
-{
-	As above (max 1.5 page)
-}
+\subsubsection{Testing}
+\review{Fill in}
 
-\section{Arithmetic Logic Unit and Mulitiplier Design} \label{sec:alu-design}.
-The \gls{alu} in my processor is capable of performing two instructions:
-\begin{itemize}
-	\item \texttt{SUBLEQ} -- Subtract and branch if if less than or equal to zero.
-	\item \texttt{MULTI} -- Multiply immediate.
-\end{itemize}
-\texttt{SUBLEQ} was chosen as the primary instruction because it is Turing complete by itself, so can execute any program. Using solely SUBLEQ instructions does have a downside however. Executing a multiply operation would require many lines of code, and so would take a large amount of time, as well as a lot of program memory. For this reason a second instruction \texttt{MULTI} is also used. \texttt{MULTI} requires minimal overhead (only a single hardware multiplexer -- a cost of 1 in the cost function), and provides loading of immediates without a multiplexer on the \gls{alu} input, as well as multiplication without a large loop of \texttt{SUBLEQ} instructions.
+\section{\glsentryshort{alu} Design} \label{sec:alu-design}.
 
 \texttt{SUBLEQ} is implemented using logic elements to form a subtracter, then the output of the subtracter is tested for the branch condition using a multiplier. The condition to branch is if the result is less than or equal to zero, we can test this using multiplication by $-1$. $-1 \times 0 = 0$, and $-1 \times [\text{Negative number}] = [\text{Positive number}]$, however $-1 \times [\text{Positive number}] = [\text{Negative number}]$, therefore the branch condition is the logical negation of the \gls{msb} of the multiplier output. This saves the use of several logic elements.
+
+\texttt{MULTI} requires minimal overhead (only a single hardware multiplexer -- a cost of 1 in the cost function), and provides loading of immediates without a multiplexer on the \gls{alu} input, as well as multiplication without a large loop of \texttt{SUBLEQ} instructions.
 
 \begin{figure}[ht]
 	\centering
@@ -412,21 +443,49 @@ The \gls{alu} in my processor is capable of performing two instructions:
 \end{figure}
 
 
-\review
-{
-	 Explain the functions implemented in  your ALU and explain your testbench. Show Modelsim test results.  If you have implemented a hardware multiplier (or multipliers), explain your multiplier design and give Modelsim test results. State if your multiplier module synthesised as an embedded hardware multiplier.  (approx. 1.5- 2 pages)
-}
-
-\section{Altera DE2-112 implementation} \label{sec:implementation}
+\subsubsection{Testing}
+\review{Fill in}
 
 
-\review
-{
-	Explain how you tested your design after  programming the FPGA. In case you had to edit your original code and resynthesize – explain what you did.  ( approx. 1-2 pages)
-}
+
+\subsection{System Level testing} \label{sec:sys-level-testing}.
+
+To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all possible inputs. 
+
+\subsubsection{Testing}
+\review{Fill in}
+
+\section{Altera DE2-115 Implementation and Validation} \label{sec:implementation}
+Due to the extensive system level verification discussed in Section \ref{sec:sys-level-testing}, few problems were encountered during implementation. Upon testing the initial programming file, it was noted that the system did not respond to any input. Investigation of the setting in Quartus revealed that the pin mapping \texttt{.qsf} file had not been loaded properly and so the pin assignments were not correct. Upon fixing this issue, the design worked as expected.
+
+The validation methodology was:
+\begin{enumerate}
+	 \item Select an $x$ and $y$ co-ordinate to test.
+	 \item Look up the expected result in the output log produced by the system level testbench.
+	 \item Input the data to the system under test.
+	 \item Check the result produced.
+\end{enumerate}
+In particular, attention was paid to ensuring that a range of random values, as well as edge cases (co-ordinates close to $0$ and the limits of the integer size) were validated. In all cases the tested value matched the expected result.
+
+
+\subsection{Decimal decoder}
+In order to improve the ease of validation, a small SystemVerilog module was written to decode the signed 8-bit values on the switches and \glspl{led}, and display them in decimal on four seven segment displays. This module does not contribute to the cost figure of the design as it is instantiated outside of the picoMIPS module. The design of the module will not be covered in detail, as it is largely outside of the scope of the project.
+
+\subsubsection{Testing}
+\review{Fill in}
+
 
 \section{Conclusion}
-\review
-{
-	State which objectives listed in your Introducton have been achieved. Calculate the cost figure of your design for synthesis on a Cyclone IV E.. Give your general  conclusion, comment on what you learnt.  Comment on ways to improve the design or extend it further.  ( approx.0.25 – 0.5 of a page)
-}
+All of the objectives noted in Section \ref{sec:intro} have been achieved. Objectives \ref{obj:design} and \ref{obj:imp} are realised through the design, and subsequent SystemVerilog implementation of the processor discussed in Section \ref{sec:design-verif}. Objectives \ref{obj:verif} and \ref{obj:valid} have been realised through the verification and validation of the design discussed in Sections \ref{sec:sys-level-testing} and \ref{sec:implementation} respectively.
+
+Obective \ref{obj:minimal}, minimalisation of the design has been at the heart of the design philosophy throughout the project, and this culminates in the tiny cost Figure calculated by Equation \ref{eq:cost-complete}.
+
+\begin{equation}
+\text{Cost} = [\text{No. of Logic Elements}] + \max([\text{No. of 9-bit Multipliers used}] -2, 0) + \frac{ [\text{kBits of RAM}]}{1024} \times 30
+\label{eq:cost-complete}
+\end{equation}
+\review{Fill in this}
+
+The created processor performs well and can easily be tailored to new applications due to the parametrised and modular design. The fact that the processor is accompanied by a powerful assembler aids in it's applicability to new applications.
+
+In conclusion there are few ways in which the design could be improved without extending the scope. One key element that would make it more versatile would be adding support for a higher level programming language. This would allow the system to be tailored to new applications with ease. A C compiler would be the obvious choice, however this would encompass a large design effort, so porting a Forth runtime to the processor would likely be a more realistic goal.

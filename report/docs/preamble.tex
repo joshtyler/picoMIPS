@@ -15,7 +15,11 @@
 \usepackage[numbers]{natbib}
 
 %Colour
-\usepackage[dvipsnames]{xcolor}
+\usepackage[dvipsnames, table]{xcolor}
+\newcommand{\shadeCell}
+{
+\cellcolor{black!25}
+}
 
 % Hyperref:
 % This package makes all references within your document clickable. By default, these references will become boxed and colored. This is turned back to normal with the \hypersetup command below.
@@ -61,11 +65,13 @@
 %\usepgfplotslibrary{external} 
 %\tikzexternalize
 
-% Pretty tables 
+% Pretty tables
 \usepackage{tabularx, booktabs}
 \renewcommand{\tabularxcolumn}[1]{>{\small}m{#1}} %Vertically centre with X
 \newcolumntype{Y}{>{\centering\arraybackslash}X}
 %\newcolumntype{Y}{}
+
+\usepackage{multirow}
 
 % Caption. For better looking captions the captions.
 \usepackage{caption}
@@ -116,6 +122,11 @@
 
 %Timing diagrams
 \usepackage{tikz-timing}[2011/01/09]
+
+%Posh enumeration
+\usepackage{enumitem}
+\setlist[enumerate]{nosep} %No special separation for enumerated lists
+\setlist[itemize]{nosep}
 
 %Review command for red text
 \newcommand{\review}[1]
