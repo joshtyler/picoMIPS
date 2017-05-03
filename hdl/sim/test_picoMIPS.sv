@@ -122,6 +122,9 @@ begin
 	# 100ns;
 	SW9 = 1;
 
+	//testAffineTransform(-1,2);
+	//$stop;
+
 	//Test all possible values
 	for(int i = -128; i < 128; i++)
 	begin

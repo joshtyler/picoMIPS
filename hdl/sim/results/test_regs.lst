@@ -1,0 +1,19 @@
+         ps       /test_regs/clk  /test_regs/reg2_addr       /test_regs/reg_2    /test_regs/dut/mem0/mem[4]                                             
+          delta      /test_regs/cycle     /test_regs/wr_data        /test_regs/leds    /test_regs/dut/mem0/mem[3]                                       
+                         /test_regs/switches        /test_regs/we    /test_regs/dut/mem0/mem[6]    /test_regs/dut/mem0/mem[1]                           
+                             /test_regs/reg1_addr      /test_regs/reg_1    /test_regs/dut/mem0/mem[5]    /test_regs/dut/mem0/mem[0]                     
+                                                               /test_regs/dut/mem0/mem[7]    /test_regs/dut/mem0/mem[2]                                 
+          0  +0                0 2'hx 9'hxxx 3'hx 3'hx 8'hxx 1'hx 8'hxx 8'hxx 8'hxx 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+          0  +1                0 2'h0 9'hxxx 3'hx 3'hx 8'hxx 1'h0 8'hxx 8'hxx 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+       1000  +0                0 2'h0 9'h0df 3'h0 3'h1 8'h14 1'h0 8'hxx 8'hxx 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+      20000  +0                1 2'h0 9'h0df 3'h0 3'h1 8'h14 1'h0 8'hxx 8'hxx 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+      20000  +2                1 2'h1 9'h0df 3'h0 3'h1 8'h14 1'h1 8'hxx 8'hxx 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+      20000  +5                1 2'h1 9'h0df 3'h0 3'h1 8'h14 1'h1 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+      30000  +0                0 2'h1 9'h0df 3'h0 3'h1 8'h14 1'h1 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+      40000  +0                1 2'h1 9'h0df 3'h0 3'h1 8'h14 1'h1 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'hb2 8'h72 
+      40000  +1                1 2'h1 9'h0df 3'h0 3'h1 8'h14 1'h1 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'h14 8'h72 
+      40000  +2                1 2'h2 9'h0df 3'h0 3'h1 8'h14 1'h0 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'h14 8'h72 
+      50000  +0                0 2'h2 9'h0df 3'h0 3'h1 8'h14 1'h0 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'h14 8'h72 
+      60000  +0                1 2'h2 9'h0df 3'h0 3'h1 8'h14 1'h0 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'h14 8'h72 
+      60000  +2                1 2'h0 9'h0df 3'h0 3'h1 8'h14 1'h0 8'h72 8'hb2 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'h14 8'h72 
+      60000  +5                1 2'h0 9'h0df 3'h0 3'h1 8'h14 1'h0 8'h72 8'h14 8'h00 8'hb6 8'hb5 8'h00 8'h08 8'h30 8'h10 8'h14 8'h72 

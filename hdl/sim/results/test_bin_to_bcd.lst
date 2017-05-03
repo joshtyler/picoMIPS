@@ -1,0 +1,15 @@
+         ps       /test_bin_to_bcd/in  /test_bin_to_bcd/disp[3]                              
+          delta  /test_bin_to_bcd/dut/sign   /test_bin_to_bcd/disp[2]                        
+                  /test_bin_to_bcd/dut/hundreds    /test_bin_to_bcd/disp[1]                  
+                           /test_bin_to_bcd/dut/tens     /test_bin_to_bcd/disp[0]            
+                               /test_bin_to_bcd/dut/units                                    
+          0  +0                 8'h80    x 4'hx 4'hx 4'hx 7'hxx 7'hxx 7'hxx 7'hxx 
+          0  +1                 8'h80    1 4'h1 4'h2 4'h8 7'h00 7'h00 7'h00 7'h00 
+          0  +3                 8'h80    1 4'h1 4'h2 4'h8 7'h00 7'h06 7'h5b 7'h7f 
+          0  +4                 8'h80    1 4'h1 4'h2 4'h8 7'h40 7'h06 7'h5b 7'h7f 
+      10000  +0                 8'h81    1 4'h1 4'h2 4'h8 7'h40 7'h06 7'h5b 7'h7f 
+      10000  +1                 8'h81    1 4'h1 4'h2 4'h7 7'h40 7'h06 7'h5b 7'h7f 
+      10000  +3                 8'h81    1 4'h1 4'h2 4'h7 7'h40 7'h06 7'h5b 7'h07 
+      20000  +0                 8'h82    1 4'h1 4'h2 4'h7 7'h40 7'h06 7'h5b 7'h07 
+      20000  +1                 8'h82    1 4'h1 4'h2 4'h6 7'h40 7'h06 7'h5b 7'h07 
+      20000  +3                 8'h82    1 4'h1 4'h2 4'h6 7'h40 7'h06 7'h5b 7'h7c 

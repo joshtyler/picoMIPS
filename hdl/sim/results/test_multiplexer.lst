@@ -1,0 +1,10 @@
+         ps       /test_multiplexer/a                        
+          delta         /test_multiplexer/b                  
+                           /test_multiplexer/sel             
+                                 /test_multiplexer/out       
+          0  +0                 8'h22 8'h5f    0 8'hxx 
+          0  +4                 8'h22 8'h5f    0 8'h22 
+      10000  +0                 8'h22 8'h5f    1 8'h22 
+      10000  +4                 8'h22 8'h5f    1 8'h5f 
+      20000  +0                 8'h22 8'h5f    0 8'h5f 
+      20000  +4                 8'h22 8'h5f    0 8'h22 
