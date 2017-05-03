@@ -44,13 +44,6 @@ logic branch;
 //Register signals
 logic `REG_SIZE wr_data, reg1, reg2;
 
-//SUBLEQ signals
-logic `REG_SIZE subleq_result;
-logic subleq_branch;
-
-//MULTI signals
-logic `REG_SIZE multi_result;
-
 //Cycle generator
 cycle cycle0
 (
@@ -94,30 +87,15 @@ regs regs0
 	.leds(LED)
 );
 
-//SUBLEQ instruction
-subleq sub0
+//ALU
+alu alu0
 (
 	.reg_1(reg1),
 	.reg_2(reg2),
-	.result(subleq_result),
-	.branch(subleq_branch)
-);
-
-//MULTI instruction
-multi multi0
-(
-	.register(reg1),
+	.op_code(op_code),
 	.immediate(immediate),
-	.result(multi_result)
-);
-
-//Multiplexer to multiplex result and branch
-multiplexer #(.WIDTH(`REG_WIDTH + 1 ))  multi_sub_out_mux
-(
-	.a( {subleq_branch, subleq_result} ),
-	.b( {1'b0, multi_result} ),
-	.sel(op_code),
-	.out( {branch, wr_data} )
+	.wr_data(wr_data),
+	.branch(branch)
 );
 
 endmodule
