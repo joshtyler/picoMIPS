@@ -32,6 +32,7 @@ begin
 	immediate = 5'b00100; //0.5
 	#1ns
 	assert(result == 8'b11000000); //12 (truncated from 4.5)
+	#10ns;
 	$stop;
 end
 

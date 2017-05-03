@@ -1,0 +1,9 @@
+         ps       /test_multi/register                  
+          delta        /test_multi/immediate            
+                                /test_multi/result      
+          0  +0                  8'h06 5'h06 8'hxx 
+          0  +2                  8'h06 5'h06 8'h04 
+      11000  +0                  8'h08 5'h0c 8'h04 
+      11000  +2                  8'h08 5'h0c 8'h0c 
+      22000  +0                  8'h80 5'h04 8'h0c 
+      22000  +2                  8'h80 5'h04 8'hc0 

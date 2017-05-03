@@ -9,8 +9,8 @@ multiplexer dut (.*);
 
 initial
 begin
-	a = 0;
-	b = 255;
+	a = 34;
+	b = 95;
 	sel = 0;
 	# 10ns;
 	assert(out == a);
