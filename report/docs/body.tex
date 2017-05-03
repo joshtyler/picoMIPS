@@ -28,7 +28,12 @@ B_2
 \label{eq:affine-transform}
 \end{equation}
 
-The goal of the exercise is to create a design as minimal as possible, but capable of implementing this affine transform.
+The goal of the exercise is to create a design as minimal as possible, but capable of implementing this affine transform. The size of the implementation is defined by the cost figure of Equation \ref{eq:cost}.
+
+\begin{equation}
+	\text{Cost} = [\text{Number of Logic Elements}] + \max([\text{Number of 9bit Multipliers}] -2, 0) + \frac{ [\text{Bits of RAM}]}{1024} \times 30
+	\label{eq:cost}
+\end{equation}
 
 In preparation for the assignment I conducted research into minimal instruction set computers, and designed my system on paper. The design of the instruction set is Summarised in section \ref{sec:instructions}, and the design of the remainder of the system is discussed therein as well as in subsequent sections.
 
@@ -47,18 +52,18 @@ During the execute cycle, the data values are valid, and so the ALU can calculat
 \begin{figure}[ht]
 	\centering
 	\begin{tikztimingtable}%[ xscale=0.8, yscale=1.5]
-		Clock			& 2L 16{2C} C \\
-		Cycle			& 2X 2{ 4D{Fetch} 4D{Decode 1} 4D{Decode 2} 4D{Execute}} D{}\\
-		PC				& 2X 16D{n} 16D{n+1}  D{} \\
-		Instruction		& 2X 4X 16D{Instruction[n]} 13D{Instruction[n+1]} \\
-		Register 1 Data	& 2X 12X 4D{Valid} 12X 4D{Valid} X \\
-		Register 2 Data	& 2X 12X 4D{Valid} 12X 4D{Valid} X \\
-		Write Enable	& 2X 12L 4H  12L 4H L \\
-		Branch			& 2X 12L 4D{Valid}  12L 4D{Valid} L \\
+		Clock			& L 12{2C} C \\
+		Cycle			& D{} 2{ 4D{Decode} 4D{Execute} 4D{Write}} D{}\\
+		PC				& D{} 2{4X 8D{Valid}}  X \\
+		Instruction		& D{} 12D{Instruction[n]} 12D{Instruction[n+1]} D{} \\
+		Register 1 Data	& X 2{ 4X 8D{Valid}} X \\
+		Register 2 Data	& X 2{ 4X 8D{Valid}} X \\
+		Write Enable	& L 2{4L 4H  4L} L \\
+		Branch			& L 2{4L 8D{Valid} } L \\
 		\extracode
 		\begin{pgfonlayer}{background}
 			\begin{scope}[semitransparent ,semithick]
-				\vertlines[darkgray,dotted]{2.0,6.0,...,36.0}
+				\vertlines[darkgray,dotted]{1.0,5.0,...,27.0}
 			\end{scope}
 		\end{pgfonlayer}
 	\end{tikztimingtable}
@@ -82,8 +87,12 @@ During the execute cycle, the data values are valid, and so the ALU can calculat
 	
 
 	% program memory
-	\node (progMem) [normalBlock, anchor=south west, minimum height=8cm] at (0,0) {\shortstack{Program\\Memory}};
-	\draw [arrowRev, draw=blue] ( progMem.west) to node[above] {Address} ++(-\nodeDist,0) to ++(0,-0.25*\nodeDist - 2cm - 4cm) to ++(\nodeDist,0) coordinate(addrLine);
+	\node (progMem) [normalBlock, anchor=south west, minimum height=9cm] at (0,0) {\shortstack{Program\\Memory}};
+	
+	\draw [arrowRev, draw=green] ( [yshift=-1cm] progMem.west) to node[above] {Cycle} ++(-0.5*\nodeDist,0);
+	\buswidth{progMem.west}{$2$}{below}{-0.5*\nodeDist +0.25cm}{-1cm};
+	
+	\draw [arrowRev, draw=blue] ( progMem.west) to node[above] {Address} ++(-\nodeDist,0) to ++(0,-0.25*\nodeDist - 2cm - 4.5cm) to ++(\nodeDist,0) coordinate(addrLine);
 	\buswidth{addrLine}{$5$}{below}{-0.25cm}{0cm};
 	
 	\draw [arrowNml, draw=blue] ( [yshift=-2cm] progMem.north east) to node[above] {  \shortstack{Register\\Address 1}} ++(\nodeDist,0);
@@ -91,8 +100,9 @@ During the execute cycle, the data values are valid, and so the ALU can calculat
 	\draw [arrowNml, draw=blue] ( [yshift=-3cm] progMem.north east) to node[above] {  \shortstack{Register\\Address 2}} ++(\nodeDist,0);
 	\buswidth{progMem.north east}{$3$}{below}{0.25cm}{-3cm};
 	
-	\draw [arrowNml, draw=green] ( [yshift=2cm] progMem.south east) to node[above] {  \shortstack{Opcode}} ++(3*\nodeDist,0);
-	\buswidth{progMem.south east}{$1$}{below}{0.25cm}{2cm};
+	\draw [arrowNml, draw=green] ( [yshift=3cm] progMem.south east) to node[above] {  \shortstack{Opcode}} ++(3*\nodeDist,0);
+	\buswidth{progMem.south east}{$1$}{below}{0.25cm}{3cm};
+	
 	
 	% registers
 	\node (regs) [cycleBlock, minimum height=5cm, right=of progMem.north east, anchor=north west] {\shortstack{Registers}};
@@ -104,7 +114,7 @@ During the execute cycle, the data values are valid, and so the ALU can calculat
 	\draw [arrowRev, draw=red] ( [yshift=-1cm] regs.north west) to node[above] {  \shortstack{Write\\Data}} ++(-0.5*\nodeDist,0)  to ++(0,0.5*\nodeDist) to ++(4*\nodeDist,0) to ++(0,-0.5*\nodeDist) to ++(-0.5*\nodeDist,0) coordinate(writeDataEnd);
 	\buswidth{writeDataEnd}{$8$}{below}{0.25cm}{0cm};
 	\draw [arrowRev, draw=green] ( [yshift=1cm] regs.south west) to node[above] {Cycle} ++(-0.5*\nodeDist,0);
-	\buswidth{regs.south west}{$4$}{below}{-0.5*\nodeDist +0.25cm}{1cm};
+	\buswidth{regs.south west}{$2$}{below}{-0.5*\nodeDist +0.25cm}{1cm};
 	
 	% alu
 	\node (alu) [normalBlock, minimum height=8cm, right=of regs.north east, anchor=north west] {\shortstack{ALU}};
@@ -113,17 +123,18 @@ During the execute cycle, the data values are valid, and so the ALU can calculat
 	\buswidth{aluLineStart}{$5$}{below}{0.25cm}{0cm};
 	
 	% Program counter
-	\node (pc) [cycleBlock, minimum height=4cm, below= 0.25*\nodeDist of progMem.south, anchor=north] {\shortstack{Program\\Counter}};
-	\draw [arrowRev, draw=green] ( [yshift=1cm] pc.south east) to node[above] {Cycle} ++(0.5*\nodeDist,0);
-	\buswidth{pc.south east}{$4$}{below}{0.5*\nodeDist -0.25cm}{1cm};
-	\draw [arrowRev, draw=green] ( [yshift=2cm] pc.south east) to node[above] {Branch} ++(4.5*\nodeDist,0) to ++(0,0.25*\nodeDist +3cm) to ++(-0.5*\nodeDist,0) coordinate(branchEnd);
+	\node (pc) [cycleBlock, minimum height=4cm, below= 0.25*\nodeDist of progMem.south, anchor=north] {\shortstack{Program\\Address\\Multiplexer}};
+	\draw [arrowRev, draw=green] ( [yshift=1cm] pc.south east) to node[above] {Branch} ++(4.5*\nodeDist,0) to ++(0,0.25*\nodeDist +5cm) to ++(-0.5*\nodeDist,0) coordinate(branchEnd);
 	\buswidth{branchEnd}{$1$}{below}{0.25cm}{0cm};
-	\draw [arrowRev, draw=blue] ( [yshift=3cm] pc.south east) to node[above] {Branch Address} ++(1.5*\nodeDist,0) to ++(0,0.25*\nodeDist +2cm);
+	\draw [arrowRev, draw=blue] ( [yshift=2cm] pc.south east) to node[above] {Branch Address} ++(1.5*\nodeDist,0) to ++(0,0.25*\nodeDist +4cm);
+	
+	\draw [arrowRev, draw=blue] ( [yshift=3cm] pc.south east) to node[above] {Next Address} ++(1*\nodeDist,0) to ++(0,0.25*\nodeDist +2cm) to ++(-1*\nodeDist,0) coordinate(nextAddressEnd);
+	\buswidth{nextAddressEnd}{$5$}{below}{0.25cm}{0cm};
 	
 	% Cycle counter
 	\node (cycle) [cycleBlock, minimum height=1.5cm, above= 0.25*\nodeDist of progMem.north, anchor=south] {\shortstack{Cycle\\Counter}};
 	\draw [arrowNml, draw=green] (cycle.east) to node[above] {  \shortstack{Cycle}} ++(0.5*\nodeDist,0);
-	\buswidth{cycle.east}{$4$}{below}{0.25cm}{0cm};
+	\buswidth{cycle.east}{$2$}{below}{0.25cm}{0cm};
 	
 	\end{tikzpicture}
 	\caption{Final processor architecture}
@@ -140,10 +151,10 @@ The processor uses 12 bit instructions. This breaks down into a one bit opcode, 
 
 \begin{figure}[ht]
 	\centering
-	\begin{tabularx}{\textwidth}{r *{12}{|Y}}
-		Bit & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
+	\begin{tabularx}{\textwidth}{Y *{16}{|Y}}
+		16 & 15 & 14 & 13 & 12 & 11 & 10 & 9 & 8 & 7 & 6 & 5 & 4 & 3 & 2 & 1 & 0 \\
 		\hline
-		Purpose & {op-code} & \multicolumn{3}{|c|}{Reg. 1 Address} & \multicolumn{3}{|c|}{Reg. 2 Address} & \multicolumn{5}{|c}{Immediate / Branch Address} \\
+		 {op.} & \multicolumn{3}{c|}{Reg. 1 Addr.} & \multicolumn{3}{c|}{Reg. 2 Addr.} & \multicolumn{5}{c|}{Imm. / Branch Address} & \multicolumn{5}{c}{Next Address} \\
 		
 	\end{tabularx}
 	\caption{Instruction Format and Assembler}
@@ -188,10 +199,59 @@ Due to it's simplicity this block was tested using the system level testing, as 
 
 \section{General Purpose Register file design, simulation and synthesis}
 
-The register block is the most complex block of the design. At its heart it uses a dual port \gls{ram} block (with one read port, and one write port) to access data. Reading data therefore uses two clock cyles, because the first register has to be read, and then the second has to be read subsequent to that. This limitation could be overcome by use of a triple port \gls{ram}. However this type of \gls{ram} would require twice as much memory, because two blocks essentially have to mirror eachother in parallel in order to provide the two read ports.
+The register block is the most complex block of the design. At its heart it uses a dual port \gls{ram} block (with one dedicated read port, and one read/write port) to access data. Use of this configuration allows both registers to be read in a single clock cycle, as shown by Figure \ref{fig:proc-timing-diagram}. It should be noted however that the \gls{ram} inside the Cyclone IV \gls{fpga} does not support reading of new data during write, and so this is why there is a dedicated write cycle in the processors execution. Removal of this would result in incorrect data being read if an instruction requested the data from a register that was written to in the previous clock cycle.
 
-\review{Could use tri-port RAM for this. Fill in once decision made.}
+The memory map of the registers is shown in Figure \ref{fig:reg-map}. Registers R1--R4 are general purpose computation registers. These are entirely application specific registers, and both reading and writing is legal for any of them. The contents of R4, however, does also map to the \glspl{led} on the \glspl{fpga} development board.
 
+The U register stands for unity. This register is guaranteed to hold the constant necessary for an immediate to be loaded directly into a register using the \texttt{MULTI} command. This is necessary because by default immediates are treated as being a fractional constant, as discussed in Section \ref{sec:alu-design}. It is forbidden for any program to write to this value, as doing so will break the \texttt{LDI} (load immediate) command. The value of this register is initialised by the bitstream only, and resetting the processor using the reset switch will not reset its value. It should be noted that writing to this register is not prevented in hardware, but it is forbidden for any program to do so.
+
+The Z register stands for zero. The value of this register is kept at zero, and writing to it should be done with extreme caution. Many of the higher level assembly commands internally rely on this register being zero when they are replaced with calls to \texttt{SUBLEQ}, and \texttt{MULTI}. Writing to Z, however, is not forbidden entirely as many of these higher level commands use it as a general purpose computation register, but they all guarantee to clear Z back to zero before exiting. Z is not initialised to zero by the bitstream, but instead the first command of the program must be \texttt{SUBLEQ Z Z} in order to clear it. This approach is taken so that the processor still functions correctly if it is reset using the reset switch whilst Z is non-zero.
+
+The SW07 and SW8 registers are different from the others in that they do not map to internal storage in the \gls{fpga}. When the program attempts to read their value the value of switches 0--7, or switch 8 is returned instead, this is achieved by multiplexing the data outputs of the register bank. There do exist, however, registers inside the register memory at the addresses of the switch registers, this is because writing to the SW07 and SW8 registers is legal, but has no effect, physical registers need to exist in order to avoid an out of range write.
+\review{Do they? Maybe I can reduce my register size slightly?}
+
+
+\begin{figure}[ht]
+	\centering
+	\begin{tabular}{r | l}
+		Address & Mnemonic \\
+		\hline
+		0x0	& R1 \\
+		0x1	& R2 \\
+		0x2	& R3 \\
+		0x3	& R4 / LED \\
+		0x4	& U \\
+		0x5	& Z \\
+		0x6	& SW07 \\
+		0x7	& SW8 \\
+	\end{tabular}
+	\caption{Register map}
+	\label{fig:reg-map}
+\end{figure}
+
+\begin{figure}[ht]
+	\centering
+	\def \nodeDist{2.5cm}
+	\tikzstyle{normalBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centered, draw=black, fill=black!40]
+	\tikzstyle{arrowNml} = [thick,->,>=stealth]
+	\tikzstyle{arrowRev} = [thick,<-,>=stealth]
+	\tikzstyle{arrowDbl} = [thick,<->,>=stealth]
+	\tikzstyle{lineNml} = [thick]
+	\begin{tikzpicture}[node distance=\nodeDist, scale=0.7, every node/.style={transform shape}]
+	
+	\newcommand{\buswidth}[5]{\draw ([xshift=#4,yshift=#5] #1) node [#3=.6ex,] {#2} +(45:-.8ex) -- +(45:.8ex)};
+	
+	
+	% program memory
+	\node (mem) [normalBlock, minimum height=9cm] at (0,0) {\shortstack{Register\\Memory}};
+	\coordinate (addr1) at ([yshift=-1cm] mem.north west);
+	\draw [arrowRev] (addr1) to node[above] (foo) {Address 1} ++(-\nodeDist,0);
+	\buswidth{addr1}{$3$}{below}{-0.5cm}{0};
+	
+	\end{tikzpicture}
+	\caption{Register memory architecture}
+	\label{fig:reg-mem-arch}
+\end{figure}
 
 \review
 {
