@@ -31,23 +31,26 @@ B_2
 The goal of the exercise is to create a design as minimal as possible, but capable of implementing this affine transform. The size of the implementation is defined by the cost figure of Equation \ref{eq:cost}.
 
 \begin{equation}
-	\text{Cost} = [\text{Number of Logic Elements}] + \max([\text{Number of 9bit Multipliers}] -2, 0) + \frac{ [\text{Bits of RAM}]}{1024} \times 30
+	\text{Cost} = [\text{No. of Logic Elements}] + \max([\text{No. of 9bit Multipliers}] -2, 0) + \frac{ [\text{Bits of RAM}]}{1024} \times 30
 	\label{eq:cost}
 \end{equation}
 
-In preparation for the assignment I conducted research into minimal instruction set computers, and designed my system on paper. The design of the instruction set is Summarised in section \ref{sec:instructions}, and the design of the remainder of the system is discussed therein as well as in subsequent sections.
+In preparation for the assignment, I conducted research into minimal instruction set computers, and designed my system on paper. The design of the instruction set is summarised in Section \ref{sec:instructions}, and the design of the remainder of the system is discussed therein, as well as in subsequent sections.
+
+As part of this preparation I investigated the structure of Altera logic blocks, and synthesised small test modules in order to see their resource utilisation.
 
 As an extension exercise I wrote SystemVerilog code to convert the signed 8-bit words on the switches and LEDs to binary coded decimal and then display this using the seven segment displays present on the development board. This is discussed briefly in Section \ref{sec:implementation}.
 
-\review{Mention size tests and investigation into logic element usage}
 
 \section{Instruction format, decoder design, program memory, and program counter} \label{sec:instructions}
 
 \subsection{System overview}
 
-A block diagram showing my picoMIPS implementation is shown in Figure \ref{fig:final-proc-arch}. In this diagram, blue lines show address signals, red shows data signals, and green shows control signals. The cycle counter is a four bit, one hot encoded counter, and controls the flow of data across four clock cycles, which make up one instruction cycle. The four cycles are fetch, decode 1, decode 2, and execute. A timing diagram showing the execution of the processor across these cycles is shown in Figure \ref{fig:proc-timing-diagram}. During the fetch stage, the program counter is valid and so the new instruction will be fetched from the program memory on the next clock edge. During the two decode cycles, the processor retrieves the values of the two data registers from memory. Two cycles are necessary for this because the Cyclone IV memory architecture only support dual port \glspl{ram} and \glspl{rom}. Therefore two clock cycles must be used in order to read from two data addresses.
+A block diagram showing my picoMIPS implementation is shown in Figure \ref{fig:final-proc-arch}. In this diagram, blue lines show address signals, red shows data signals, and green shows control signals.
 
-During the execute cycle, the data values are valid, and so the ALU can calculate the result. The ALU is combinational, and so the branch flag and write data are valid on the next clock edge. This means that the program counter can be set to the new value, and the data can be written to the relevant register.
+The cycle counter has three states, and controls the flow of data across four clock cycles, which make up one instruction cycle. The counter uses a one hot encoding, with the zero state also valid. This means that no decoder is necessary for states not encoded as zero.
+
+The three cycles are decode, execute, and write. A timing diagram showing the execution of the processor across these cycles is shown in Figure \ref{fig:proc-timing-diagram}. During the decode stage, the new instruction is valid, and so it can be decoded, and the register values can be fetched from \gls{ram}. During the execute stage, the register values have been fetched from \gls{ram} and so the \gls{alu} can perform the operation. During the write cycle the data produced by the \gls{alu} is written back to \gls{ram}. A cycle is necessary for this because the \gls{ram} blocks inside the Cyclone IV \gls{fpga} do not support read during write with new data, so a cycle is necessary to ensure that the register value is valid for the decode cycle.
 
 \begin{figure}[ht]
 	\centering
@@ -145,9 +148,13 @@ During the execute cycle, the data values are valid, and so the ALU can calculat
 
 To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all possible inputs. 
 
-\subsection{Instruction Format}
+\subsection{Instruction Format} \label{sec:inst-format}
 
-The processor uses 12 bit instructions. This breaks down into a one bit opcode, two 3 bit register addresses, and a 5 bit immediate / branch address, as shown in Figure \ref{fig:inst-format}. The opcode can be made one bit long because there are only two instructions in the processor, and therefore one bit is enough to differentiate them. The immediate / branch address bits can be shared across the two functions because the MULTI instruction uses an immediate but does not branch, whilst the SUBLEQ instruction does not use an immediate, but can branch. The details of why these two instructions were chosen, and the details of their implementation is given in Section \ref{sec:alu-design}.
+The processor uses 17 bit instructions. This breaks down into a one bit opcode, two 3 bit register addresses, a 5 bit immediate / branch address, and a 5 bit value to store the next address as shown in Figure \ref{fig:inst-format}.
+
+The opcode can be made one bit long because there are only two instructions in the processor, and therefore one bit is enough to differentiate them. The immediate / branch address bits can be shared across the two functions because the MULTI instruction uses an immediate but does not branch, whilst the SUBLEQ instruction does not use an immediate, but can branch. The details of why these two instructions were chosen, and the details of their implementation is given in Section \ref{sec:alu-design}.
+
+The next address is stored in the program code to remove the need for an program counter. The reason for this choice is that it contributes less to the cost function. The program code uses 5 bit addresses, and therefore a 5 bit counter would be needed. This would require 5 logic elements, which is a cost of 5. There are 31 instructions in the main program, and therefore the cost of adding 5 bits to each one is $\frac{31 \times 5}{1024}\times 30 = 4.54$, therefore it is cheaper to not have a dedicated program counter.
 
 \begin{figure}[ht]
 	\centering
@@ -161,23 +168,19 @@ The processor uses 12 bit instructions. This breaks down into a one bit opcode, 
 	\label{fig:inst-format}
 \end{figure}
 
-A listing of the program used is given in Listing \ref{lst:main-prog}. This is a custom form of assembly code created for this project. Upon reading the source code, the reader will notice that the majority of assembly instructions used are not present as machine instructions on the processor architecture. This is because writing assembly code solely using \texttt{SUBLEQ} and \texttt{MULTI} instructions can be very confusing. For this reason a two-stage compilation toolchain was created using the Python programming language. The first stage takes each assembly instruction that doesn't map into a machine instruction, and re-writes it so that only \texttt{SUBLEQ} and \texttt{MULTI} instructions are used. This is performed by \texttt{optimiser.py}, and the second stage is to compile this assembly code into machine instructions. This is performed by \texttt{assembler.py}. The machine code output by the compilation toolchain is listed in Listing \ref{lst:main-prog-compiled}.
+A listing of the program used is given in Listing \ref{lst:main-prog}. This is a custom dialect of assembly code created for this project. Upon reading the source code, the reader will notice that the majority of assembly instructions used are not present as machine instructions in the processor architecture. This is because writing assembly code solely using \texttt{SUBLEQ} and \texttt{MULTI} instructions can be very confusing. For this reason a two-stage compilation toolchain was created using the Python programming language. The first stage takes each assembly instruction that doesn't map into a machine instruction, and re-writes it so that only \texttt{SUBLEQ} and \texttt{MULTI} instructions are used. This is performed by \texttt{optimiser.py}, and the second stage is to compile this assembly code into machine instructions. This is performed by \texttt{assembler.py}. The machine code output by the compilation toolchain is listed in Listing \ref{lst:main-prog-compiled}.
 
 The majority of instructions such as \texttt{MOV} and \texttt{ADD} have their conventional definitions, however there are some slightly more esoteric instructions, namely \texttt{JLEZ}, and \texttt{JGZ}. These are represent `jump if less than or equal to zero', and `jump if greater than or equal to zero' respectively. These instructions are used to poll switch 8. Initially the more conventional \texttt{JZ}, and \texttt{JNZ} (`jump if zero', and `jump if not zero') were used. The system worked with these instructions, however they require more \texttt{SUBLEQ} instructions to implement, and since the switch 8 register is guaranteed to be either $0x00$, or $0x01$ the simpler instructions are functionally equivalent.
 
 \subsection{Program Memory Design}
-The program memory block is very simple, it consists solely of a block of synchronous \gls{ram}\, initialised with the data from Listing \ref{lst:main-prog-compiled}. The \gls{ram} was inferred by creating an array of words, and then transferring the addressed word to the output on each rising clock edge, using a non blocking assignment within a rising clock edge \texttt{always} block. This inference approach was taken as opposed to using a dedicated Altera RAM library element because it allows the code to be portable between \gls{fpga} vendors, and an explicit instantiation was not required because compilation with Quartus reveals that the synthesis engine has correctly inferred \gls{ram} from this block.
+The program memory block is very simple, it consists solely of a block of synchronous \gls{rom}, initialised with the data from Listing \ref{lst:main-prog-compiled}.
+
+Initially the \gls{rom} was inferred by creating an array of words, and then transferring the addressed word to the output on each rising clock edge, using a non blocking assignment within a rising clock edge \texttt{always} block. However later the \gls{rom} was instantiated using a dedicated Altera RAM library element. The reason for this choice is that the design requires access to the asynchronous clear input on the address register in order to reset the design. This is something which was not possible to infer using standard SystemVerilog code.
 
 Due to its simplicity this block was not tested with an individual testbench, and the functionality of the block was verified during system level testing, as described in Section \ref{sec:sys-level-testing}.
 
-\subsection{Program Counter Design}
-The program counter consists of three elements: a register to hold the current value of the program counter, a combinational adder to calculate the next value of the program counter if the program does not branch, and a multiplexer to select between the branch address and next instruction. The selected address is clocked into the register on the clock edge after the execute cycle. This in turn allow the program memory to fetch the correct instruction.
-
-\review{This is wrong. We cannot use the RAM register because we cannot read it back, so we need a store of the current PC anyway}
-\review{Could mention consideration of storing the program counter in the program code itself}
-The register is not strictly necessary in this design in the sense that one could make use of the read enable and asynchronous clear features of the program counter's memory block. This would also remove the need for the `Fetch' cycle in the processor's execution. However the registers do not add to the cost figure of the design, since the logic cells are already being instantiated for the adder. In addition to this, the timing constraints of an asynchronous clear signal to the register input of the memory blocks are complex, and so likely to be violated by the use of a simple switch clear input.
-
-The program counter has a total utilisation of five logic elements for the logic cells containing the adder and counter, and a further multiplier for the multiplexer.
+\subsection{Program Address Multiplexer Design}
+Initially a program counter was used in the design, implemented as a 5 bit counter and multiplexer. However, as discussed in Section \ref{sec:inst-format}, the next address was later stored in the program counter \gls{rom}. This means that only a multiplexer, which multiplexes the address of the program memory between the next address and branch address is necessary.
 
 Due to it's simplicity this block was tested using the system level testing, as described in Section \ref{sec:sys-level-testing}, rather than a dedicated testbench.
 
@@ -198,6 +201,8 @@ Due to it's simplicity this block was tested using the system level testing, as 
 
 
 \section{General Purpose Register file design, simulation and synthesis}
+
+\subsection{Register Layout}
 
 The register block is the most complex block of the design. At its heart it uses a dual port \gls{ram} block (with one dedicated read port, and one read/write port) to access data. Use of this configuration allows both registers to be read in a single clock cycle, as shown by Figure \ref{fig:proc-timing-diagram}. It should be noted however that the \gls{ram} inside the Cyclone IV \gls{fpga} does not support reading of new data during write, and so this is why there is a dedicated write cycle in the processors execution. Removal of this would result in incorrect data being read if an instruction requested the data from a register that was written to in the previous clock cycle.
 
@@ -229,6 +234,13 @@ The SW07 and SW8 registers are different from the others in that they do not map
 	\label{fig:reg-map}
 \end{figure}
 
+\subsection{Register Implementation}
+The registers are implemented as shown in Figure \ref{fig:reg-mem-arch}. The main block is the register memory block, this is a block of true dual port \gls{ram}. Data 1 is set to the value of the data stored at address 1 on each rising clock edge, and data 2 is set to the value of the data stored at address 2 if the write enable is false, otherwise the value stored at address 2 is replaced with the write data.
+
+The \gls{led} register allows mirrors register R4 in the main memory bank, but allows the \glspl{led} to be constantly driven.
+
+The switch multiplexers are three way multiplexers that multiplex between the register data, switches[0:7], and switches[8], dependant on the register address selected. The control signals for these multiplexers are derived from two register addresses. Internally the multiplexers are formed of two cascaded two input multiplexers, one to choose between the two registers of switches, and one to select between the switch values and the data register.
+
 \begin{figure}[ht]
 	\centering
 	\def \nodeDist{2.5cm}
@@ -243,10 +255,63 @@ The SW07 and SW8 registers are different from the others in that they do not map
 	
 	
 	% program memory
-	\node (mem) [normalBlock, minimum height=9cm] at (0,0) {\shortstack{Register\\Memory}};
+	\node (mem) [normalBlock, minimum height=7cm] at (0,0) {\shortstack{Register\\Memory}};
 	\coordinate (addr1) at ([yshift=-1cm] mem.north west);
-	\draw [arrowRev] (addr1) to node[above] (foo) {Address 1} ++(-\nodeDist,0);
-	\buswidth{addr1}{$3$}{below}{-0.5cm}{0};
+	\coordinate (addr2) at ([yshift=-2cm] mem.north west);
+	
+	\coordinate (d) at ([yshift=1cm] mem.south west);
+	\coordinate (we) at ([yshift=2cm] mem.south west);
+	\draw [arrowRev] (addr1) to node[above] {Address 1} ++(-1.5*\nodeDist,0) coordinate(addr1End);
+	\draw [arrowRev] (addr2) to node[above] {Address 2} ++(-1.5*\nodeDist,0) coordinate(addr2End);
+	\draw [arrowRev] (d) to node[above] {Write Data} ++(-1.5*\nodeDist,0) coordinate(dEnd);
+	\draw [arrowRev] (we) to node[above] {Write Enable} ++(-1.5*\nodeDist,0) coordinate(weEnd);
+	\buswidth{addr1End}{$3$}{below}{0.5cm}{0};
+	\buswidth{addr2End}{$3$}{below}{0.5cm}{0};
+	\buswidth{dEnd}{$8$}{below}{0.5cm}{0};
+	\buswidth{weEnd}{$1$}{below}{0.5cm}{0};
+	
+	%LED register
+	\node (ledReg) [normalBlock, minimum height=3cm, below= 0.5*\nodeDist of mem] {\shortstack{LED\\Register}};
+	\draw [arrowNml] (dEnd) -- ++(0.75*\nodeDist,0) -- ++(0, -0.5*\nodeDist - 2cm) -- node[above] {Data} ++(0.75*\nodeDist,0);
+	\coordinate (ledEnable) at ([yshift=1cm] ledReg.south west);
+	\draw [arrowRev] (ledEnable) to node[above] {Enable} ++(-0.75*\nodeDist,0)  coordinate(ledEnableEnd);
+	\node[left] at (ledEnableEnd) {\shortstack{(Write Enable) AND\\ (Address 2 == LED)}};
+	
+	\draw [arrowNml] (ledReg.east) -- node[above] {LEDs} ++(1.5*\nodeDist,0);
+	\buswidth{ledReg.east}{$8$}{below}{0.5cm}{0};
+	
+	%Switch multiplexer 1
+	\node (sw1Mux) [normalBlock, minimum height=3cm, right= of mem.north east, anchor = north west] {\shortstack{Switch\\Multiplexer}};
+	
+	\coordinate (switches) at ([yshift=-1cm] sw1Mux.north west);
+	\coordinate (regdata) at ([yshift=-2cm] sw1Mux.north west);
+	\draw [arrowRev] (switches) to node[above] {Switches} ++(-0.75*\nodeDist,0) coordinate(switchesEnd);
+	\buswidth{switchesEnd}{$9$}{below}{0.5cm}{0};
+	\draw [arrowRev] (regdata) to node[above] {Data 1} ++(-\nodeDist,0) coordinate(dataEnd);
+	\buswidth{dataEnd}{$8$}{below}{0.5cm}{0};
+	\draw [arrowNml] (sw1Mux.east) to node[above] {\shortstack{Register 1\\Data}} ++(\nodeDist,0);
+	\buswidth{sw1Mux.east}{$8$}{below}{0.5cm}{0};
+	
+	\draw [arrowRev] (sw1Mux.north) -- ++(0,0.25*\nodeDist) coordinate(addrEnd);
+	\node[above] (addrLabel) at (addrEnd) {Address 1};
+	\buswidth{addrEnd}{$3$}{right}{0}{-0.25cm};
+	
+	%Switch multiplexer 2
+	\node (sw2Mux) [normalBlock, minimum height=3cm, right= of mem.south east, anchor = south west] {\shortstack{Switch\\Multiplexer}};
+	
+	\coordinate (switches) at ([yshift=-1cm] sw2Mux.north west);
+	\coordinate (regdata) at ([yshift=-2cm] sw2Mux.north west);
+	\draw [arrowRev] (switches) to node[above] {Switches} ++(-0.75*\nodeDist,0) coordinate(switchesEnd);
+	\buswidth{switchesEnd}{$9$}{below}{0.5cm}{0};
+	\draw [arrowRev] (regdata) to node[above] {Data 1} ++(-\nodeDist,0) coordinate(dataEnd);
+	\buswidth{dataEnd}{$8$}{below}{0.5cm}{0};
+	\draw [arrowNml] (sw2Mux.east) to node[above] {\shortstack{Register 2\\Data}} ++(\nodeDist,0);
+	\buswidth{sw2Mux.east}{$8$}{below}{0.5cm}{0};
+	
+	
+	\draw [arrowRev] (sw2Mux.south) -- ++(0,-0.25*\nodeDist) coordinate(addrEnd);
+	\node[below] (addrLabel) at (addrEnd) {Address 2};
+	\buswidth{addrEnd}{$3$}{right}{0}{0.25cm};
 	
 	\end{tikzpicture}
 	\caption{Register memory architecture}
@@ -259,12 +324,102 @@ The SW07 and SW8 registers are different from the others in that they do not map
 }
 
 \section{Arithmetic Logic Unit and Mulitiplier Design} \label{sec:alu-design}.
+The \gls{alu} in my processor is capable of performing two instructions:
+\begin{itemize}
+	\item \texttt{SUBLEQ} -- Subtract and branch if if less than or equal to zero.
+	\item \texttt{MULTI} -- Multiply immediate.
+\end{itemize}
+\texttt{SUBLEQ} was chosen as the primary instruction because it is Turing complete by itself, so can execute any program. Using solely SUBLEQ instructions does have a downside however. Executing a multiply operation would require many lines of code, and so would take a large amount of time, as well as a lot of program memory. For this reason a second instruction \texttt{MULTI} is also used. \texttt{MULTI} requires minimal overhead (only a single hardware multiplexer -- a cost of 1 in the cost function), and provides loading of immediates without a multiplexer on the \gls{alu} input, as well as multiplication without a large loop of \texttt{SUBLEQ} instructions.
+
+\texttt{SUBLEQ} is implemented using logic elements to form a subtracter, then the output of the subtracter is tested for the branch condition using a multiplier. The condition to branch is if the result is less than or equal to zero, we can test this using multiplication by $-1$. $-1 \times 0 = 0$, and $-1 \times [\text{Negative number}] = [\text{Positive number}]$, however $-1 \times [\text{Positive number}] = [\text{Negative number}]$, therefore the branch condition is the logical negation of the \gls{msb} of the multiplier output. This saves the use of several logic elements.
+
+\begin{figure}[ht]
+	\centering
+	\def \nodeDist{2.5cm}
+	\tikzstyle{normalBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centered, draw=black, fill=black!40]
+	\tikzstyle{arrowNml} = [thick,->,>=stealth]
+	\tikzstyle{arrowRev} = [thick,<-,>=stealth]
+	\tikzstyle{arrowDbl} = [thick,<->,>=stealth]
+	\tikzstyle{lineNml} = [thick]
+	\begin{tikzpicture}[node distance=\nodeDist, scale=0.7, every node/.style={transform shape}]
+	
+	\newcommand{\buswidth}[5]{\draw ([xshift=#4,yshift=#5] #1) node [#3=.6ex,] {#2} +(45:-.8ex) -- +(45:.8ex)};
+	
+	
+	% MULTI
+	\node (multi) [normalBlock, minimum height=3cm] at (0,0) {\shortstack{MULTI}};
+	\coordinate (imm) at ([yshift=-1cm] multi.north west);
+	\coordinate (reg1) at ([yshift=-2cm] multi.north west);
+	\coordinate (multiResult) at ([yshift=-1cm] multi.north east);
+	\coordinate (multiBranch) at ([xshift =0.5*\nodeDist, yshift=-2cm] multi.north east);
+	\coordinate (multiMeet)  at ([xshift =\nodeDist, yshift=-1.5cm] multi.north east);
+	
+	\draw [arrowRev] (imm) to node[above] {Immediate} ++(-1.5*\nodeDist,0) coordinate(immEnd);
+	\draw [arrowRev] (reg1) to node[above] {Register 1} ++(-1.5*\nodeDist,0) coordinate(reg1End);
+	\buswidth{immEnd}{$8$}{below}{0.5cm}{0};
+	\buswidth{reg1End}{$8$}{below}{0.5cm}{0};
+	
+	\draw [arrowNml] (multiResult) to node[above] {Result} ++(\nodeDist,0) -- (multiMeet);
+	\draw [arrowNml] (multiBranch) to node[above] {`$0$'} ++(0.5*\nodeDist,0) -- (multiMeet);
+	\buswidth{multiResult}{$8$}{below}{0.5cm}{0};
+	\buswidth{multiBranch}{$1$}{below}{0.5cm}{0};
+	
+	% SUBLEQ
+	\node (subleq) [normalBlock, minimum height=3cm, below = 1cm of multi] {\shortstack{SUBLEQ}};
+	\coordinate (subleqReg1) at ([yshift=-1cm] subleq.north west);
+	\coordinate (reg2) at ([yshift=-2cm] subleq.north west);
+	\coordinate (subleqResult) at ([yshift=-1cm] subleq.north east);
+	\coordinate (subleqBranch) at ([yshift=-2cm] subleq.north east);
+	\coordinate (subleqMeet)  at ([xshift =\nodeDist, yshift=-1.5cm] subleq.north east);
+	
+	\draw [arrowRev] (subleqReg1) to node[above] {Register 1} ++(-0.75*\nodeDist,0) coordinate(subleqReg1Mid) |- (reg1);
+	\draw [arrowRev] (reg2) to node[above] {Register 2} ++(-1.5*\nodeDist,0) coordinate(reg2End);
+	\buswidth{reg2End}{$8$}{below}{0.5cm}{0};
+	
+	\draw [arrowNml] (subleqResult) to node[above] {Result} ++(\nodeDist,0) -- (subleqMeet);
+	\draw [arrowNml] (subleqBranch) to node[above] {Branch} ++(\nodeDist,0) -- (subleqMeet);
+	\buswidth{subleqResult}{$8$}{below}{0.5cm}{0};
+	\buswidth{subleqBranch}{$1$}{below}{0.5cm}{0};
+	
+	%Mux
+	\node (mux) [normalBlock, minimum height=7cm, right = 1.5*\nodeDist of multi.north east, anchor= north west] {\shortstack{Multiplexer}};
+	\coordinate (in2) at ([yshift=1.5cm] mux.south west);
+	\coordinate (in1) at ([yshift=-1.5cm] mux.north west);
+	\coordinate (out) at (mux.east);
+	\coordinate (sel) at (mux.south);
+	
+	\draw [arrowNml] (subleqMeet) -- (in2);
+	\draw [arrowNml] (multiMeet) -- (in1);
+	\buswidth{subleqMeet}{$9$}{below}{0.5cm}{0};
+	\buswidth{multiMeet}{$9$}{below}{0.5cm}{0};
+	
+	\draw[arrowNml] (out) -- ++(0.5*\nodeDist,0) coordinate(outMeet);
+	\draw[arrowNml] (outMeet) -- ++(0,0.5cm) coordinate(outResult) to node[above] {Result} ++(\nodeDist,0);
+	\draw[arrowNml] (outMeet) -- ++(0,0.5cm) coordinate(outResult) to node[above] {Result} ++(\nodeDist,0);
+	\draw[arrowNml] (outMeet) -- ++(0,-0.5cm) coordinate(outBranch) to node[above] {Branch} ++(\nodeDist,0);
+	
+	\buswidth{out}{$9$}{below}{0.5cm}{0};
+	\buswidth{outResult}{$8$}{below}{0.5cm}{0};
+	\buswidth{outBranch}{$1$}{below}{0.5cm}{0};
+	
+	\draw [arrowRev] (sel) -- ++(0,-0.25*\nodeDist) coordinate(selEnd);
+	\node[below] (selLabel) at (selEnd) {Opcode};
+	\buswidth{selEnd}{$1$}{right}{0}{0.25cm};
+	
+	\end{tikzpicture}
+	\caption{\glsentryshort{alu} architecture}
+	\label{fig:alu-arch}
+\end{figure}
+
+
 \review
 {
 	 Explain the functions implemented in  your ALU and explain your testbench. Show Modelsim test results.  If you have implemented a hardware multiplier (or multipliers), explain your multiplier design and give Modelsim test results. State if your multiplier module synthesised as an embedded hardware multiplier.  (approx. 1.5- 2 pages)
 }
 
-\section{Altera DE0 implementation} \label{sec:implementation}
+\section{Altera DE2-112 implementation} \label{sec:implementation}
+
+
 \review
 {
 	Explain how you tested your design after  programming the FPGA. In case you had to edit your original code and resynthesize – explain what you did.  ( approx. 1-2 pages)
@@ -275,3 +430,5 @@ The SW07 and SW8 registers are different from the others in that they do not map
 {
 	State which objectives listed in your Introducton have been achieved. Calculate the cost figure of your design for synthesis on a Cyclone IV E.. Give your general  conclusion, comment on what you learnt.  Comment on ways to improve the design or extend it further.  ( approx.0.25 – 0.5 of a page)
 }
+
+\input{../modelsim_exporter/output/test_regs.tex}
