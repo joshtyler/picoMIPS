@@ -38,7 +38,6 @@
 
 %Acronyms!
 \usepackage[nonumberlist, acronyms, toc,]{glossaries}
-\makenoidxglossaries
 \setacronymstyle{long-short}
 \renewcommand{\glsgroupskip}{} %Don't put a small space between groups
 \input{docs/acronyms} %Import list of acronyms
@@ -123,9 +122,12 @@
 %Timing diagrams
 \usepackage{tikz-timing}[2011/01/09]
 
-%Posh enumeration
-\usepackage{enumitem}
-\setlist[enumerate]{nosep} %No special separation for enumerated lists
+%Posh enumeration
+
+\usepackage{enumitem}
+
+\setlist[enumerate]{nosep} %No special separation for enumerated lists
+
 \setlist[itemize]{nosep}
 
 %Review command for red text
