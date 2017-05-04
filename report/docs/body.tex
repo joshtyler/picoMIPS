@@ -164,8 +164,10 @@ A timing diagram showing the execution of the processor across these cycles is s
 \subsection{Instruction and Program Design} \label{sec:inst-format}
 The processor is capable of performing two instructions tabulated in Table \ref{tbl:insts}. \texttt{SUBLEQ} was chosen as the primary instruction because it is Turing complete by itself, so can execute any program. Using solely \texttt{SUBLEQ} instructions does have a downside however. Executing a multiply operation would require many lines of code, and so would take a large amount of time, as well as a lot of program memory. For this reason a second instruction \texttt{MULTI} is also used. This instruction also gives a method of loading immediates (by multiplying by $1$), which would require an additional multiplexer and bit in the instruction in a \texttt{SUBLEQ} only system.
 
-\begin{table}[ht]
-	\centering
+\begin{table}[ht]
+
+	\centering
+
 	\caption{Instructions}
 	\label{tbl:insts}
 	\begin{tabular}{l  l l}
@@ -208,7 +210,7 @@ Initially the \gls{rom} was inferred by creating an array of words, and then tra
 
 Due to its simplicity this block was not tested with an individual testbench, and the functionality of the block was verified during system level testing, as described in Section \ref{sec:sys-level-testing}.
 
-\subsection{Program Address Multiplexer Design}
+\subsection{Program Address Multiplexer Design} \label{sec:mux-design}
 The multiplexer used to multiplex between the next address and branch address is not implemented using a traditional structure, instead a multiplier is used.
 
 The reason for this choice is that an $n$ bit multiplexer requires $n$ logic blocks for a traditional implementation, however using hardware multipliers, one can implement up to a $9$ bit multiplexer using a single $18 \times 18$ hardware multiplexer. This would represent a cost of $2$ (because an $18 \times 18$ multiplexer is formed of two $9\times9$ multipliers).
@@ -234,7 +236,9 @@ This multiplexer was designed as a parametric model, so that it can be used as t
 
 
 \subsubsection{Testing}
-\review{Fill in}
+In order to test the multiplexer. I wrote a testbench which instantiates an $8$ bit multiplexer, asserts two numbers on it's inputs, switches between them and checks the value of the output using asserts. The stimulus portion of the testbench is listed in Listing \ref{lst:test-mux}, and the resultant waveform is presented in Figure \ref{fig:test-mux}.
+
+Inspection of the waveform demonstrates that the output is equal to \texttt{a}  when \texttt{sel} is low, and equal to \texttt{b} when \texttt{sel} is high. This is the expected behaviour, and the asserts in the testbench pass.
 
 
 \subsection{Register Design}
@@ -356,13 +360,17 @@ The switch multiplexers are three way multiplexers that multiplex between the re
 \end{figure}
 
 \subsubsection{Testing}
-\review{Fill in}
+In order to test the registers. I wrote a testbench which instantiates the register block, and presents its inputs with the signals which would be present if if were part of the overall system. The stimulus portion of the testbench is listed in Listing \ref{lst:test-regs}, and the resultant waveform is presented in Figure \ref{fig:test-regs}. Inspection of the stimulus portion shows that the registers are initially loaded with random values for testing, this allows the registers to be tested more rigorously since each register will have a unique value, rather than the initialisation value. A SystemVerilog task was written to perform one read/write cycle, and this uses asserts to test the output, and internal value of the register memory at each state.
 
-\section{\glsentryshort{alu} Design} \label{sec:alu-design}.
+For brevity, Figure \ref{fig:test-regs} shows a single iteration of the \texttt{rwTest} task, and is the result of executing the algorithm up to the commented out \texttt{stop} command on line 96. Inspection of the Figure shows that the values of registers at addresses $0x0$, and $0x1$ is requested, these are $0x72$, and $0xb2$ respectively. These values are correctly asserted on the output after one clock cycle. In addition, the value of the write data, $0x14$, is written to register $0x2$ on the third clock cycle as expected.
+
+\section{\glsentryshort{alu} Design} \label{sec:alu-design}
+
+The \gls{alu} design is relatively simple owing to the fact that the processor only contains two instructions, as discussed in Section \ref{sec:inst-format}. This means that the \gls{alu} only contains the implementation of the two instructions, and a multiplexer to assert the correct output based upon the opcode. This is illustrated graphically in Figure \ref{fig:alu-arch}. The multiplexer implementation uses a multiplier as discussed in Section \ref{sec:mux-design}
 
 \texttt{SUBLEQ} is implemented using logic elements to form a subtracter, then the output of the subtracter is tested for the branch condition using a multiplier. The condition to branch is if the result is less than or equal to zero, we can test this using multiplication by $-1$. $-1 \times 0 = 0$, and $-1 \times [\text{Negative number}] = [\text{Positive number}]$, however $-1 \times [\text{Positive number}] = [\text{Negative number}]$, therefore the branch condition is the logical negation of the \gls{msb} of the multiplier output. This saves the use of several logic elements.
 
-\texttt{MULTI} requires minimal overhead (only a single hardware multiplexer -- a cost of 1 in the cost function), and provides loading of immediates without a multiplexer on the \gls{alu} input, as well as multiplication without a large loop of \texttt{SUBLEQ} instructions.
+\texttt{MULTI} requires minimal overhead (only a single hardware multiplier -- a cost of 1 in the cost function), and provides loading of immediates without a multiplexer on the \gls{alu} input, as well as multiplication without a large loop of \texttt{SUBLEQ} instructions. Its implementation is straightforward, simply inferring a single hardware multiplier. The only slight complication is setting the significance of the input words. Whilst the data stored in the register has normal significance $[-2^7: 2^0]$, the immediate has significance $[-2^1: 2^{-3}]$. In order to allow use of 5 bit immediates to represent the fractional constants natively. When non fractional constants are loaded, the register which they are multiplied with is set to contain 4 in order to cancel out the effect.
 
 \begin{figure}[ht]
 	\centering
@@ -444,16 +452,13 @@ The switch multiplexers are three way multiplexers that multiplex between the re
 
 
 \subsubsection{Testing}
-\review{Fill in}
-
-
+Due to the simplicity of the \gls{alu}, I chose to only test the \texttt{MULTI} operation separately and due to its simplicity test the \texttt{SUBLEQ} module in system level testing. I wrote a testbench which instantiates \texttt{MULTI}, presents stimulus data and asserts that the result produced is equal to manually calculated results. The stimulus portion of the testbench is listed in Listing \ref{lst:test-multi}, and the resultant waveform is presented in Figure \ref{fig:test-multi}. Inspection of the stimulus shows that for each case the multiplier correctly calculates the value of the of \texttt{result}, such that it is equal to the manually calculated value in each case. This is confirmed by the assertions.
 
 \subsection{System Level testing} \label{sec:sys-level-testing}.
 
-To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all possible inputs. 
+To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all $2^{16} = 65536$ possible inputs. Listing \ref{lst:test-picomips} shows the stimulus for the testing, which loops over all the possible input combinations. The stimulus in each case, along with expected values, is logged to a text file so that it can be used during the validation process as well. The key part of this stimulus is the SystemVerilog task \texttt{testAffineTransform}. This function calculates the expected value, mimics the switch input which the user would perform, and ensures that the outputs match using assertions.
 
-\subsubsection{Testing}
-\review{Fill in}
+Figure \ref{fig:test-picomips} shows the stimulus and output for one transform $x_1 = -1$ (0xff), $y_1 = 2$ (0x2). The expected outputs for this operation are $x_2 = 2$ (0x2), $y_2 = 13$ (0xd), so inspection of the \texttt{LED} signal in the waveform, along with \texttt{SW[7:0]}, show that the result is correct. 
 
 \section{Altera DE2-115 Implementation and Validation} \label{sec:implementation}
 Due to the extensive system level verification discussed in Section \ref{sec:sys-level-testing}, few problems were encountered during implementation. Upon testing the initial programming file, it was noted that the system did not respond to any input. Investigation of the setting in Quartus revealed that the pin mapping \texttt{.qsf} file had not been loaded properly and so the pin assignments were not correct. Upon fixing this issue, the design worked as expected.
@@ -472,7 +477,7 @@ In particular, attention was paid to ensuring that a range of random values, as 
 In order to improve the ease of validation, a small SystemVerilog module was written to decode the signed 8-bit values on the switches and \glspl{led}, and display them in decimal on four seven segment displays. This module does not contribute to the cost figure of the design as it is instantiated outside of the picoMIPS module. The design of the module will not be covered in detail, as it is largely outside of the scope of the project.
 
 \subsubsection{Testing}
-\review{Fill in}
+Testing of the decimal decoder is shown in Listing \ref{lst:test-bin-bcd} and Figure \ref{fig:test-bin-bcd}. In the testbench stimulus, it can be seen that all $2^8 = 256$ possible integers are tested, however the shown waveform presented in this report, only covers the first two $-128$ and $-127$. Inspection of the waveform confirms that for $-128$ (0x80), the sign signal is true, and the tens, hundreds and units are correctly decoded to $1$, $2$, and $8$ respectively. The same is true for the second test, $-127$ (0x81).
 
 
 \section{Conclusion}
@@ -480,11 +485,13 @@ All of the objectives noted in Section \ref{sec:intro} have been achieved. Objec
 
 Obective \ref{obj:minimal}, minimalisation of the design has been at the heart of the design philosophy throughout the project, and this culminates in the tiny cost Figure calculated by Equation \ref{eq:cost-complete}.
 
-\begin{equation}
-\text{Cost} = [\text{No. of Logic Elements}] + \max([\text{No. of 9-bit Multipliers used}] -2, 0) + \frac{ [\text{kBits of RAM}]}{1024} \times 30
+\begin{align}
+\text{Cost} &= [\text{No. of Logic Elements}] + \max([\text{No. of 9-bit Multipliers used}] -2, 0) + \frac{ [\text{kBits of RAM}]}{1024} \times 30 \nonumber \\
+&= 13 +  \max(13 -2, 0) + \frac{607}{1024} \times 30  \nonumber \\
+&= 13 + 11 + 17.78  \nonumber \\
+&= 41.78
 \label{eq:cost-complete}
-\end{equation}
-\review{Fill in this}
+\end{align}
 
 The created processor performs well and can easily be tailored to new applications due to the parametrised and modular design. The fact that the processor is accompanied by a powerful assembler aids in it's applicability to new applications.
 
