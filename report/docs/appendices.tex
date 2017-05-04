@@ -2,57 +2,12 @@
 \begin{appendices}
 	
 \section{Program Code} \label{app:prog-code}
+
+This appendix contains the program which the picoMIPS processor runs, both in assembly code and machine code form.
 	
 \lstinputlisting[language=picoASM, caption={Main Program}, label={lst:main-prog}]{../asm_progs/source/main.asm}
+\newpage
 \lstinputlisting[language=picoASM, caption={Main Program (compiled)}, label={lst:main-prog-compiled}]{../asm_progs/compiled/main.mif}
 
-\section{Simulation Stimulus and Waveforms} \label{app:sim-waveforms}
-
-The simulation timing diagrams reproduced here have been exported from ModelSim as a tabular list, then converted to a Ti\textit{k}Z timing waveform using modelsim2latex available from \verb|http://github.com/sh-ow/modelsim2latex/|. Trivial modifications were made to make the script compatible with the files exported from ModelSim. In each case, the waveform rendered by Ti\textit{k}Z has been manually validated against the displayed result in Modelsim, to ensure correct operation of the tool.
-
-\lstinputlisting[language=verilog, caption={\texttt{test\_bin\_to\_bcd.sv} Stimulus}, label={lst:test-bin-bcd},firstnumber=10,linerange={10-18}]{../hdl/sim/test_bin_to_bcd.sv}
-
-\begin{figure}[ht]
-	\centering
-	\input{figs/timing/test_bin_to_bcd}
-	\caption{\texttt{test\_bin\_to\_bcd.sv} Output}
-	\label{fig:test-bin-bcd}
-\end{figure}
-
-\lstinputlisting[language=verilog, caption={\texttt{test\_multi.sv} Stimulus}, label={lst:test-multi},firstnumber=17,linerange={17-37}]{../hdl/sim/test_multi.sv}
-
-\begin{figure}[ht]
-	\centering
-	\input{figs/timing/test_multi}
-	\caption{\texttt{test\_multi.sv} Output}
-	\label{fig:test-multi}
-\end{figure}
-
-\lstinputlisting[language=verilog, caption={\texttt{test\_multiplexer.sv} Stimulus}, label={lst:test-mux},firstnumber=10,linerange={10-24}]{../hdl/sim/test_multiplexer.sv}
-
-\begin{figure}[ht]
-	\centering
-	\input{figs/timing/test_multiplexer}
-	\caption{\texttt{test\_multiplexer.sv} Output}
-	\label{fig:test-mux}
-\end{figure}
-
-\lstinputlisting[language=verilog, caption={\texttt{test\_regs.sv} Stimulus}, label={lst:test-regs},firstnumber=82,linerange={82-107}]{../hdl/sim/test_regs.sv}
-
-\begin{figure}[ht]
-	\centering
-	\input{figs/timing/test_regs}
-	\caption{\texttt{test\_regs.sv} Output}
-	\label{fig:test-regs}
-\end{figure}
-
-\lstinputlisting[language=verilog, caption={\texttt{test\_picoMIPS.sv} Stimulus}, label={lst:test-picomips},firstnumber=110,linerange={110-141}]{../hdl/sim/test_picoMIPS.sv}
-
-\begin{figure}[ht]
-	\centering
-	\input{figs/timing/test_picoMIPS}
-	\caption{\texttt{test\_picoMIPS.sv} Output}
-	\label{fig:test-picomips}
-\end{figure}
 
 \end{appendices}

@@ -40,11 +40,13 @@ The minimalisation objective, objective \ref{obj:minimal} is quanified by by the
 	\label{eq:cost}
 \end{equation}
 
-In preparation for the assignment, I conducted research into minimal instruction set computers, and designed my system on paper. The design of the instruction set is summarised in Section \ref{sec:instructions}, and the design of the remainder of the system is discussed therein, as well as in subsequent sections.
+In preparation for the assignment, I conducted research into minimal instruction set computers, and designed my system on paper. The design of the instruction set is summarised in Section \ref{sec:inst-format}, and the design of the remainder of the system is discussed therein, as well as in subsequent sections.
 
 As part of this preparation I investigated the structure of Altera logic blocks, and synthesised small test modules in order to see their resource utilisation.
 
 As an extension exercise I wrote SystemVerilog code to convert the signed 8-bit words on the switches and LEDs to binary coded decimal and then display this using the seven segment displays present on the development board. This is discussed briefly in Section \ref{sec:implementation}.
+
+The simulation timing diagrams reproduced in the report have been exported from ModelSim, and converted to a Ti\textit{k}Z timing waveform using modelsim2latex \cite{show2016}. Trivial modifications were made to make the script compatible with the files exported from ModelSim. In each case, the waveform rendered by Ti\textit{k}Z has been manually validated against the displayed result in ModelSim, to ensure correct operation of the tool.
 
 
 \section{System Design and Verification} \label{sec:design-verif}
@@ -67,7 +69,7 @@ The final block is the program address multiplexer. This block is responsible fo
 	\centering
 	\def \nodeDist{2.5cm}
 	
-	\tikzstyle{cycleBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centered, draw=black, fill=black!40]
+	\tikzstyle{cycleBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centred, draw=black, fill=black!40]
 	\tikzstyle{normalBlock} = [cycleBlock] %Didn't end up using this in the end
 	\tikzstyle{arrowNml} = [thick,->,>=stealth]
 	\tikzstyle{arrowRev} = [thick,<-,>=stealth]
@@ -241,6 +243,15 @@ In order to test the multiplexer. I wrote a testbench which instantiates an $8$ 
 Inspection of the waveform demonstrates that the output is equal to \texttt{a}  when \texttt{sel} is low, and equal to \texttt{b} when \texttt{sel} is high. This is the expected behaviour, and the asserts in the testbench pass.
 
 
+\lstinputlisting[language=verilog, caption={\texttt{test\_multiplexer.sv} Stimulus}, label={lst:test-mux},firstnumber=10,linerange={10-24}]{../hdl/sim/test_multiplexer.sv}
+
+\begin{figure}[ht]
+	\centering
+	\input{figs/timing/test_multiplexer}
+	\caption{\texttt{test\_multiplexer.sv} Output}
+	\label{fig:test-mux}
+\end{figure}
+
 \subsection{Register Design}
 \subsubsection{Layout}
 
@@ -285,7 +296,7 @@ The switch multiplexers are three way multiplexers that multiplex between the re
 \begin{figure}[ht]
 	\centering
 	\def \nodeDist{2.5cm}
-	\tikzstyle{normalBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centered, draw=black, fill=black!40]
+	\tikzstyle{normalBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centred, draw=black, fill=black!40]
 	\tikzstyle{arrowNml} = [thick,->,>=stealth]
 	\tikzstyle{arrowRev} = [thick,<-,>=stealth]
 	\tikzstyle{arrowDbl} = [thick,<->,>=stealth]
@@ -364,6 +375,15 @@ In order to test the registers. I wrote a testbench which instantiates the regis
 
 For brevity, Figure \ref{fig:test-regs} shows a single iteration of the \texttt{rwTest} task, and is the result of executing the algorithm up to the commented out \texttt{stop} command on line 96. Inspection of the Figure shows that the values of registers at addresses $0x0$, and $0x1$ is requested, these are $0x72$, and $0xb2$ respectively. These values are correctly asserted on the output after one clock cycle. In addition, the value of the write data, $0x14$, is written to register $0x2$ on the third clock cycle as expected.
 
+\lstinputlisting[language=verilog, caption={\texttt{test\_regs.sv} Stimulus}, label={lst:test-regs},firstnumber=82,linerange={82-107}]{../hdl/sim/test_regs.sv}
+
+\begin{figure}[ht]
+	\centering
+	\input{figs/timing/test_regs}
+	\caption{\texttt{test\_regs.sv} Output}
+	\label{fig:test-regs}
+\end{figure}
+
 \section{\glsentryshort{alu} Design} \label{sec:alu-design}
 
 The \gls{alu} design is relatively simple owing to the fact that the processor only contains two instructions, as discussed in Section \ref{sec:inst-format}. This means that the \gls{alu} only contains the implementation of the two instructions, and a multiplexer to assert the correct output based upon the opcode. This is illustrated graphically in Figure \ref{fig:alu-arch}. The multiplexer implementation uses a multiplier as discussed in Section \ref{sec:mux-design}
@@ -375,7 +395,7 @@ The \gls{alu} design is relatively simple owing to the fact that the processor o
 \begin{figure}[ht]
 	\centering
 	\def \nodeDist{2.5cm}
-	\tikzstyle{normalBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centered, draw=black, fill=black!40]
+	\tikzstyle{normalBlock} = [rectangle, rounded corners, minimum width=\nodeDist, minimum height=\nodeDist, text centred, draw=black, fill=black!40]
 	\tikzstyle{arrowNml} = [thick,->,>=stealth]
 	\tikzstyle{arrowRev} = [thick,<-,>=stealth]
 	\tikzstyle{arrowDbl} = [thick,<->,>=stealth]
@@ -454,11 +474,29 @@ The \gls{alu} design is relatively simple owing to the fact that the processor o
 \subsubsection{Testing}
 Due to the simplicity of the \gls{alu}, I chose to only test the \texttt{MULTI} operation separately and due to its simplicity test the \texttt{SUBLEQ} module in system level testing. I wrote a testbench which instantiates \texttt{MULTI}, presents stimulus data and asserts that the result produced is equal to manually calculated results. The stimulus portion of the testbench is listed in Listing \ref{lst:test-multi}, and the resultant waveform is presented in Figure \ref{fig:test-multi}. Inspection of the stimulus shows that for each case the multiplier correctly calculates the value of the of \texttt{result}, such that it is equal to the manually calculated value in each case. This is confirmed by the assertions.
 
+\lstinputlisting[language=verilog, caption={\texttt{test\_multi.sv} Stimulus}, label={lst:test-multi},firstnumber=17,linerange={17-37}]{../hdl/sim/test_multi.sv}
+
+\begin{figure}[ht]
+	\centering
+	\input{figs/timing/test_multi}
+	\caption{\texttt{test\_multi.sv} Output}
+	\label{fig:test-multi}
+\end{figure}
+
 \subsection{System Level testing} \label{sec:sys-level-testing}.
 
 To test the overall functionality of the system, a testbench was created to simulate switch input, and confirm the output result against a model of the affine transform calculated by the testbench. Using this method, the system was able to be tested for all $2^{16} = 65536$ possible inputs. Listing \ref{lst:test-picomips} shows the stimulus for the testing, which loops over all the possible input combinations. The stimulus in each case, along with expected values, is logged to a text file so that it can be used during the validation process as well. The key part of this stimulus is the SystemVerilog task \texttt{testAffineTransform}. This function calculates the expected value, mimics the switch input which the user would perform, and ensures that the outputs match using assertions.
 
-Figure \ref{fig:test-picomips} shows the stimulus and output for one transform $x_1 = -1$ (0xff), $y_1 = 2$ (0x2). The expected outputs for this operation are $x_2 = 2$ (0x2), $y_2 = 13$ (0xd), so inspection of the \texttt{LED} signal in the waveform, along with \texttt{SW[7:0]}, show that the result is correct. 
+Figure \ref{fig:test-picomips} shows the stimulus and output for one transform $x_1 = -1$ (0xff), $y_1 = 2$ (0x2). The expected outputs for this operation are $x_2 = 2$ (0x2), $y_2 = 13$ (0xd), so inspection of the \texttt{LED} signal in the waveform, along with \texttt{SW[7:0]}, show that the result is correct.
+
+\lstinputlisting[language=verilog, caption={\texttt{test\_picoMIPS.sv} Stimulus}, label={lst:test-picomips},firstnumber=110,linerange={110-141}]{../hdl/sim/test_picoMIPS.sv}
+
+\begin{figure}[ht]
+	\centering
+	\input{figs/timing/test_picoMIPS}
+	\caption{\texttt{test\_picoMIPS.sv} Output}
+	\label{fig:test-picomips}
+\end{figure}
 
 \section{Altera DE2-115 Implementation and Validation} \label{sec:implementation}
 Due to the extensive system level verification discussed in Section \ref{sec:sys-level-testing}, few problems were encountered during implementation. Upon testing the initial programming file, it was noted that the system did not respond to any input. Investigation of the setting in Quartus revealed that the pin mapping \texttt{.qsf} file had not been loaded properly and so the pin assignments were not correct. Upon fixing this issue, the design worked as expected.
@@ -479,11 +517,19 @@ In order to improve the ease of validation, a small SystemVerilog module was wri
 \subsubsection{Testing}
 Testing of the decimal decoder is shown in Listing \ref{lst:test-bin-bcd} and Figure \ref{fig:test-bin-bcd}. In the testbench stimulus, it can be seen that all $2^8 = 256$ possible integers are tested, however the shown waveform presented in this report, only covers the first two $-128$ and $-127$. Inspection of the waveform confirms that for $-128$ (0x80), the sign signal is true, and the tens, hundreds and units are correctly decoded to $1$, $2$, and $8$ respectively. The same is true for the second test, $-127$ (0x81).
 
+\lstinputlisting[language=verilog, caption={\texttt{test\_bin\_to\_bcd.sv} Stimulus}, label={lst:test-bin-bcd},firstnumber=10,linerange={10-18}]{../hdl/sim/test_bin_to_bcd.sv}
+
+\begin{figure}[ht]
+	\centering
+	\input{figs/timing/test_bin_to_bcd}
+	\caption{\texttt{test\_bin\_to\_bcd.sv} Output}
+	\label{fig:test-bin-bcd}
+\end{figure}
 
 \section{Conclusion}
 All of the objectives noted in Section \ref{sec:intro} have been achieved. Objectives \ref{obj:design} and \ref{obj:imp} are realised through the design, and subsequent SystemVerilog implementation of the processor discussed in Section \ref{sec:design-verif}. Objectives \ref{obj:verif} and \ref{obj:valid} have been realised through the verification and validation of the design discussed in Sections \ref{sec:sys-level-testing} and \ref{sec:implementation} respectively.
 
-Obective \ref{obj:minimal}, minimalisation of the design has been at the heart of the design philosophy throughout the project, and this culminates in the tiny cost Figure calculated by Equation \ref{eq:cost-complete}.
+Objective \ref{obj:minimal}, minimalisation of the design has been at the heart of the design philosophy throughout the project, and this culminates in the tiny cost Figure calculated by Equation \ref{eq:cost-complete}.
 
 \begin{align}
 \text{Cost} &= [\text{No. of Logic Elements}] + \max([\text{No. of 9-bit Multipliers used}] -2, 0) + \frac{ [\text{kBits of RAM}]}{1024} \times 30 \nonumber \\
